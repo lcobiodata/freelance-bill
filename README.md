@@ -15,7 +15,7 @@ To get started with BillEase, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/bill-ease.git
+    git clone https://github.com/lcobiodata/bill-ease.git
     ```
 2. Navigate to the project directory:
     ```bash
