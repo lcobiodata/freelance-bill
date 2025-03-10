@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -12,7 +14,14 @@ const Register = () => {
       await axios.post(`${process.env.REACT_APP_API_URL}/register`, { username, password });
       setMessage("Registration successful! Please login.");
     } catch (err) {
-      setMessage("User already exists");
+      if (err.response && err.response.data.message === "User already exists") {
+        setMessage("User already exists. Redirecting to login...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000); // Redirect after 2 seconds
+      } else {
+        setMessage("Registration failed.");
+      }
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -13,7 +14,7 @@ const Login = () => {
       localStorage.setItem("token", res.data.token);
       setMessage("Login successful!");
     } catch (err) {
-      setMessage("Invalid credentials");
+      setMessage("Invalid credentials. If you are not registered, please register first.");
     }
   };
 
@@ -28,6 +29,11 @@ const Login = () => {
         <button type="submit">Login</button>
       </form>
       <p>{message}</p>
+      {message.includes("Invalid credentials") && (
+        <p>
+          <Link to="/register">Register here</Link>
+        </p>
+      )}
     </div>
   );
 };
