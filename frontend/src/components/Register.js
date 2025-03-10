@@ -9,7 +9,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://127.0.0.1:5000/register", { username, password });
+      await axios.post(`${process.env.REACT_APP_API_URL}/register`, { username, password });
       setMessage("Registration successful! Please login.");
     } catch (err) {
       setMessage("User already exists");
