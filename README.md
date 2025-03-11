@@ -1,6 +1,6 @@
-# BillEase
+# FreelanceBill
 
-BillEase is a project designed to simplify and streamline the process of generating and managing freelancer invoices. This README provides an overview of the project, how to set it up, and how to contribute.
+FreelanceBill is a project designed to simplify and streamline the process of generating and managing freelancer invoices. This README provides an overview of the project, how to set it up, and how to contribute.
 
 ## Features
 
@@ -11,7 +11,7 @@ BillEase is a project designed to simplify and streamline the process of generat
 
 ## Installation
 
-To get started with BillEase, follow these steps:
+To get started with FreelanceBill, follow these steps:
 
 1. Clone the repository:
     ```bash
@@ -58,4 +58,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For any questions or suggestions, please open an issue or contact us at support@billease.com.
+For any questions or suggestions, please open an issue or contact us at support@FreelanceBill.com.
