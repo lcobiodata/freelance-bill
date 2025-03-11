@@ -123,6 +123,10 @@ const Login = () => {
             </Button>
           </form>
 
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </Typography>
+
           {/* Divider with "or" text */}
           <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
             <Divider sx={{ flexGrow: 1 }} />
