@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { TextField, Button, Typography, Container, Paper, Box, Alert } from "@mui/material";
 
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +14,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/register`, { username, password });
+      await axios.post(`${API_URL}/register`, { username, password });
       setMessage(
         <Alert severity="success">
           Registration successful! Please <Link to="/login">login here</Link>.

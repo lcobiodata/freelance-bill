@@ -4,7 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { TextField, Button, Typography, Container, Paper, Box, Alert } from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
-console.log("Google Client ID (React):", process.env.REACT_APP_GOOGLE_CLIENT_ID);
+const API_URL = process.env.REACT_APP_BACKEND_URL;
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+console.log("Google Client ID (React):", GOOGLE_CLIENT_ID);
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -15,10 +18,10 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { username, password });
+      const res = await axios.post(`${API_URL}/login`, { username, password });
       localStorage.setItem("token", res.data.token);
       setMessage(<Alert severity="success">Login successful! Redirecting...</Alert>);
-      setTimeout(() => navigate("/dashboard"), 2000); // Redirect to dashboard after 2 seconds
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
       setMessage(<Alert severity="error">Invalid credentials. If you are not registered, please <Link to="/register">register here</Link>.</Alert>);
     }
@@ -26,17 +29,17 @@ const Login = () => {
 
   const handleGoogleSuccess = async (response) => {
     try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/login/google`);
-        localStorage.setItem("token", res.data.token);
-        setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
-        setTimeout(() => navigate("/dashboard"), 2000);
+      const res = await axios.post(`${API_URL}/authorize/google`, { token: response.credential });
+      localStorage.setItem("token", res.data.token);
+      setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
+      setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
-        setMessage(<Alert severity="error">Google login failed. Please try again.</Alert>);
+      setMessage(<Alert severity="error">Google login failed. Please try again.</Alert>);
     }
-};
+  };
 
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Container maxWidth="sm">
         <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
           <Typography variant="h4" gutterBottom>
