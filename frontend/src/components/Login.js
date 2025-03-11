@@ -9,6 +9,7 @@ import {
   Paper,
   Box,
   Alert,
+  Divider,
 } from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
@@ -121,6 +122,13 @@ const Login = () => {
               Login
             </Button>
           </form>
+
+          {/* Divider with "or" text */}
+          <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
+            <Divider sx={{ flexGrow: 1 }} />
+            <Typography variant="body1" sx={{ mx: 2 }}>or</Typography>
+            <Divider sx={{ flexGrow: 1 }} />
+          </Box>
 
           {/* Google Login Button */}
           <Box sx={{ my: 2 }}>
