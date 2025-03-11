@@ -189,3 +189,16 @@ def login_google():
 
     except ValueError:
         return jsonify({"error": "Invalid or expired ID token"}), 401
+
+# # Protected route example
+# @app.route("/protected", methods=["GET"])
+# @jwt_required()
+# def protected():
+#     """
+#     Protected route example. Only accessible if you have a valid JWT.
+#     """
+#     current_user = get_jwt_identity()
+#     return jsonify({"message": f"Hello, {current_user}!"}), 200
+
+
+# -------------------- Run --------------------
