@@ -12,7 +12,8 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
-import EmailVerificationSuccess from "./components/EmailVerificationSuccess"; // New component
+import EmailVerificationSuccess from "./components/EmailVerificationSuccess";
+import ForgotPassword from "./components/ForgotPassword"; // Import the ForgotPassword component
 
 const Navbar = () => {
   const token = localStorage.getItem("token");
@@ -66,8 +67,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          {/* New route for email verification success */}
           <Route path="/verify-success" element={<EmailVerificationSuccess />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} /> {/* New route for ForgotPassword */}
         </Routes>
       </Container>
       <Footer />
