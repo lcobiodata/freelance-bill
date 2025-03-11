@@ -1,14 +1,18 @@
-from authlib.integrations.flask_client import OAuth
-from flask import Flask, request, jsonify, redirect, url_for, session
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
-from flask_mail import Mail, Message
+from flask_mail import Mail
 from flask_migrate import Migrate
+from flask_session import Session
 from dotenv import load_dotenv
 import os
 import secrets
+
+# For verifying Google ID tokens
+import google.auth.transport.requests
+import google.oauth2.id_token
 
 # Load environment variables
 load_dotenv()
@@ -19,13 +23,15 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS") == "True"
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")  # Flask session secret key
 app.config["SERVER_NAME"] = os.getenv("SERVER_NAME")
 app.config["PREFERRED_URL_SCHEME"] = os.getenv("PREFERRED_URL_SCHEME")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")  # Flask session secret key
+app.config["SESSION_TYPE"] = os.getenv("SESSION_TYPE", "filesystem")  # Default to filesystem
+app.config["SESSION_PERMANENT"] = False
 
 # Google OAuth Configuration
 app.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID")
-app.config["GOOGLE_CLIENT_SECRET"] = os.getenv("GOOGLE_CLIENT_SECRET")
+# NOTE: We don't need GOOGLE_CLIENT_SECRET for client-side flow
 
 # Email Configuration (Zoho SMTP)
 app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
@@ -37,23 +43,15 @@ app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 # Enable CORS for frontend
 CORS(app, supports_credentials=True, origins=[f"http://{os.getenv('SERVER_NAME').split(':')[0]}:3000"])
 
+# Initialize session
+Session(app)
+
 # Initialize extensions
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
-oauth = OAuth(app)
 mail = Mail(app)
 migrate = Migrate(app, db)
-
-# Google OAuth Client Registration
-google = oauth.register(
-    name="google",
-    client_id=app.config["GOOGLE_CLIENT_ID"],
-    client_secret=app.config["GOOGLE_CLIENT_SECRET"],
-    access_token_url="https://oauth2.googleapis.com/token",
-    authorize_url="https://accounts.google.com/o/oauth2/auth",
-    client_kwargs={"scope": "openid email profile"},
-)
 
 # User model
 class User(db.Model):
@@ -68,12 +66,11 @@ with app.app_context():
     db.create_all()
 
 # ---------------------------- Routes ----------------------------
-
 @app.route('/')
 def home():
     return "Welcome to FreelanceBill!", 200
 
-# Register route with email verification (DISABLED)
+# Register route (with email verification disabled)
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -84,37 +81,12 @@ def register():
         return jsonify({"message": "User already exists"}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-
-    # Generate verification token (DISABLED)
-    # verification_token = secrets.token_urlsafe(32)
-    
-    # Store user with is_verified=True (TEMPORARY)
-    new_user = User(username=username, password=hashed_password, is_verified=True)  # Mark user as verified
+    new_user = User(username=username, password=hashed_password, is_verified=True)
     db.session.add(new_user)
     db.session.commit()
-
-    # Send verification email (DISABLED)
-    # verification_link = f"{request.host_url}verify/{verification_token}"
-    # msg = Message("Verify Your Email", sender=app.config["MAIL_USERNAME"], recipients=[username])
-    # msg.body = f"Click the link to verify your email: {verification_link}"
-    # mail.send(msg)
-
     return jsonify({"message": "User registered successfully."}), 201
 
-# Email verification route (DISABLED)
-"""
-@app.route('/verify/<token>', methods=['GET'])
-def verify_email(token):
-    user = User.query.filter_by(verification_token=token).first()
-    if not user:
-        return jsonify({"message": "Invalid or expired verification token"}), 400
-    user.is_verified = True
-    user.verification_token = None
-    db.session.commit()
-    return jsonify({"message": "Email verified successfully!"}), 200
-"""
-
-# Login route (EMAIL VERIFICATION CHECK DISABLED)
+# Login route (password-based)
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -125,32 +97,46 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
 
-    # Email verification check (DISABLED)
-    # if not user.is_verified:
-    #     return jsonify({"message": "Please verify your email before logging in"}), 403
-
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
 
-# Google OAuth Login
-@app.route('/login/google')
+# ---------------------------- NEW Google Login (Client-Side Flow) ----------------------------
+@app.route('/login/google', methods=['POST'])
 def login_google():
-    redirect_uri = url_for("authorize_google", _external=True)
-    return google.authorize_redirect(redirect_uri)
+    """
+    Expects a JSON payload: { "token": "<Google ID token>" }
+    """
+    data = request.get_json()
+    if not data or "token" not in data:
+        return jsonify({"error": "No token provided"}), 400
 
-@app.route('/authorize/google')
-def authorize_google():
-    token = google.authorize_access_token()
-    user_info = google.get("https://www.googleapis.com/oauth2/v2/userinfo").json()
-    
-    user = User.query.filter_by(username=user_info["email"]).first()
-    if not user:
-        new_user = User(username=user_info["email"], password=None, is_verified=True)
-        db.session.add(new_user)
-        db.session.commit()
-    
-    access_token = create_access_token(identity=user_info["email"])
-    return jsonify({"token": access_token, "user": user_info})
+    id_token_str = data["token"]
+    try:
+        # Verify the token using google-auth
+        id_info = google.oauth2.id_token.verify_oauth2_token(
+            id_token_str,
+            google.auth.transport.requests.Request(),
+            app.config["GOOGLE_CLIENT_ID"]
+        )
+        # Extract the email (unique identifier)
+        email = id_info.get("email")
+        if not email:
+            return jsonify({"error": "Email not provided by Google"}), 400
+
+        # Create or fetch the user
+        user = User.query.filter_by(username=email).first()
+        if not user:
+            user = User(username=email, password=None, is_verified=True)
+            db.session.add(user)
+            db.session.commit()
+
+        # Generate our own JWT for the user
+        access_token = create_access_token(identity=email)
+        return jsonify({"token": access_token, "user": {"email": email}}), 200
+
+    except ValueError:
+        # Token verification failed
+        return jsonify({"error": "Invalid or expired ID token"}), 401
 
 # Protected route
 @app.route('/protected', methods=['GET'])

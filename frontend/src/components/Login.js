@@ -7,14 +7,13 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-console.log("Google Client ID (React):", GOOGLE_CLIENT_ID);
-
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
 
+  // Normal password-based login
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -23,14 +22,29 @@ const Login = () => {
       setMessage(<Alert severity="success">Login successful! Redirecting...</Alert>);
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
-      setMessage(<Alert severity="error">Invalid credentials. If you are not registered, please <Link to="/register">register here</Link>.</Alert>);
+      setMessage(
+        <Alert severity="error">
+          Invalid credentials. If you are not registered, please{" "}
+          <Link to="/register">register here</Link>.
+        </Alert>
+      );
     }
   };
 
-  const handleGoogleSuccess = async (response) => {
+  // Google OAuth success callback
+  const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await axios.post(`${API_URL}/authorize/google`, { token: response.credential });
+      // 1. The user just logged in with Google: get ID token from Google
+      const idToken = credentialResponse.credential;
+
+      // 2. POST the ID token to your new /login/google endpoint
+      const res = await axios.post(`${API_URL}/login/google`, {
+        token: idToken,
+      });
+
+      // 3. Store your own JWT
       localStorage.setItem("token", res.data.token);
+
       setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
@@ -46,6 +60,8 @@ const Login = () => {
             Login to Your Account
           </Typography>
           {message && <Box sx={{ my: 2 }}>{message}</Box>}
+
+          {/* Traditional username/password login */}
           <form onSubmit={handleLogin}>
             <TextField
               fullWidth
@@ -70,9 +86,15 @@ const Login = () => {
               Login
             </Button>
           </form>
+
+          {/* Google Login Button */}
           <Box sx={{ my: 2 }}>
-            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setMessage(<Alert severity="error">Google login failed.</Alert>)} />
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setMessage(<Alert severity="error">Google login failed.</Alert>)}
+            />
           </Box>
+
           <Typography variant="body2" sx={{ mt: 2 }}>
             Don't have an account? <Link to="/register">Register here</Link>.
           </Typography>
