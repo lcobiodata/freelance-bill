@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -12,7 +12,11 @@ const Register = () => {
     e.preventDefault();
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/register`, { username, password });
-      setMessage("Registration successful! Please login.");
+      setMessage(
+        <span>
+          Registration successful! Please <Link to="/login">login here</Link>.
+        </span>
+      );
     } catch (err) {
       if (err.response && err.response.data.message === "User already exists") {
         setMessage("User already exists. Redirecting to login...");
