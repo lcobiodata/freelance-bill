@@ -73,7 +73,7 @@ with app.app_context():
 def home():
     return "Welcome to FreelanceBill!", 200
 
-# Register route with email verification
+# Register route with email verification (DISABLED)
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -84,20 +84,25 @@ def register():
         return jsonify({"message": "User already exists"}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-    verification_token = secrets.token_urlsafe(32)
-    new_user = User(username=username, password=hashed_password, verification_token=verification_token)
+
+    # Generate verification token (DISABLED)
+    # verification_token = secrets.token_urlsafe(32)
+    
+    # Store user with is_verified=True (TEMPORARY)
+    new_user = User(username=username, password=hashed_password, is_verified=True)  # Mark user as verified
     db.session.add(new_user)
     db.session.commit()
 
-    # Send verification email
-    verification_link = f"{request.host_url}verify/{verification_token}"
-    msg = Message("Verify Your Email", sender=app.config["MAIL_USERNAME"], recipients=[username])
-    msg.body = f"Click the link to verify your email: {verification_link}"
-    mail.send(msg)
+    # Send verification email (DISABLED)
+    # verification_link = f"{request.host_url}verify/{verification_token}"
+    # msg = Message("Verify Your Email", sender=app.config["MAIL_USERNAME"], recipients=[username])
+    # msg.body = f"Click the link to verify your email: {verification_link}"
+    # mail.send(msg)
 
-    return jsonify({"message": "User registered successfully. Check your email for verification."}), 201
+    return jsonify({"message": "User registered successfully."}), 201
 
-# Email verification route
+# Email verification route (DISABLED)
+"""
 @app.route('/verify/<token>', methods=['GET'])
 def verify_email(token):
     user = User.query.filter_by(verification_token=token).first()
@@ -107,8 +112,9 @@ def verify_email(token):
     user.verification_token = None
     db.session.commit()
     return jsonify({"message": "Email verified successfully!"}), 200
+"""
 
-# Login route
+# Login route (EMAIL VERIFICATION CHECK DISABLED)
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -118,8 +124,10 @@ def login():
     user = User.query.filter_by(username=username).first()
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
-    if not user.is_verified:
-        return jsonify({"message": "Please verify your email before logging in"}), 403
+
+    # Email verification check (DISABLED)
+    # if not user.is_verified:
+    #     return jsonify({"message": "Please verify your email before logging in"}), 403
 
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
