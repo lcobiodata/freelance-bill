@@ -15,11 +15,11 @@ To get started with FreelanceBill, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/lcobiodata/bill-ease.git
+    git clone https://github.com/lcobiodata/freelance-bill.git
     ```
 2. Navigate to the project directory:
     ```bash
-    cd bill-ease
+    cd freelance-bill
     ```
 3. Install the dependencies:
     ```bash
