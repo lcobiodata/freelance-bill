@@ -1,15 +1,23 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { AppBar, Toolbar, Typography, Button, Container, Box } from "@mui/material";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
+import EmailVerificationSuccess from "./components/EmailVerificationSuccess"; // New component
 
 const Navbar = () => {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-  const location = useLocation(); // Get current route
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -24,7 +32,6 @@ const Navbar = () => {
         </Typography>
         {token ? (
           <>
-            {/* Hide Dashboard button when already on /dashboard */}
             {location.pathname !== "/dashboard" && (
               <Button color="inherit" component={Link} to="/dashboard">
                 Dashboard
@@ -59,6 +66,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          {/* New route for email verification success */}
+          <Route path="/verify-success" element={<EmailVerificationSuccess />} />
         </Routes>
       </Container>
       <Footer />
@@ -66,7 +75,6 @@ const App = () => {
   );
 };
 
-// Extracted Footer for cleaner structure
 const Footer = () => (
   <Box
     component="footer"

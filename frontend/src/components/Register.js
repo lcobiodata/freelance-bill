@@ -42,7 +42,7 @@ const Register = () => {
         password,
       });
 
-      // If success, show a message that an email was sent
+      // Show a message that an email was sent and keep the button disabled
       setMessage(
         <Alert severity="success">
           {res.data.message ||
@@ -50,20 +50,17 @@ const Register = () => {
         </Alert>
       );
       
-      // Redirect to /login after a delay (e.g., 3 seconds)
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
+      // Optionally, you could reset form fields here if needed:
+      // setUsername("");
+      // setPassword("");
+      
     } catch (err) {
       if (err.response?.data?.message === "User already exists") {
         setMessage(
           <Alert severity="warning">
-            User already exists. Redirecting to login...
+            User already exists. Please <Link to="/login">login here</Link>.
           </Alert>
         );
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
       } else {
         setMessage(
           <Alert severity="error">

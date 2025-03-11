@@ -131,8 +131,9 @@ def verify_email(token):
     user.verification_token = None
     db.session.commit()
 
-    # Instead of returning JSON, redirect to your React login page (or a "verified" page)
-    return redirect("http://localhost:3000/login")  
+    # Redirect to the frontend verification success page
+    return redirect(f'{app.config["FRONTEND_URL"]}/verify-success', code=302)
+
 
 @app.route("/login", methods=["POST"])
 def login():
