@@ -134,3 +134,4 @@ cython_debug/
 # Node.js
 node_modules/
 jspm_packages/
+package-lock.json
