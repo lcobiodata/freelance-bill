@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { TextField, Button, Typography, Container, Paper, Box, Alert } from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
+console.log("Google Client ID (React):", process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,14 +26,14 @@ const Login = () => {
 
   const handleGoogleSuccess = async (response) => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/login/google`);
-      localStorage.setItem("token", res.data.token);
-      setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
-      setTimeout(() => navigate("/dashboard"), 2000);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/login/google`);
+        localStorage.setItem("token", res.data.token);
+        setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
+        setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
-      setMessage(<Alert severity="error">Google login failed. Please try again.</Alert>);
+        setMessage(<Alert severity="error">Google login failed. Please try again.</Alert>);
     }
-  };
+};
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>

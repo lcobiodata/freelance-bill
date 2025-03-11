@@ -9,23 +9,32 @@ from dotenv import load_dotenv
 import os
 import secrets
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
 
-# Database setup (using environment variables)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS') == 'True'
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
-app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+# General Flask Configurations
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS") == "True"
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")  # Flask session secret key
+app.config["SERVER_NAME"] = os.getenv("SERVER_NAME")
+app.config["PREFERRED_URL_SCHEME"] = os.getenv("PREFERRED_URL_SCHEME")
+
+# Google OAuth Configuration
+app.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID")
+app.config["GOOGLE_CLIENT_SECRET"] = os.getenv("GOOGLE_CLIENT_SECRET")
+
+# Email Configuration (Zoho SMTP)
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS") == "True"
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+# Enable CORS for frontend
+CORS(app, supports_credentials=True, origins=[f"http://{os.getenv('SERVER_NAME').split(':')[0]}:3000"])
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -34,6 +43,7 @@ jwt = JWTManager(app)
 oauth = OAuth(app)
 mail = Mail(app)
 
+# Google OAuth Client Registration
 google = oauth.register(
     name="google",
     client_id=app.config["GOOGLE_CLIENT_ID"],
@@ -55,22 +65,23 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
-# Define a route for the root URL
+# ---------------------------- Routes ----------------------------
+
 @app.route('/')
 def home():
-    return 'Welcome to BillEase!', 200
+    return "Welcome to FreelanceBill!", 200
 
 # Register route with email verification
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    username = data.get("username")
+    password = data.get("password")
 
     if User.query.filter_by(username=username).first():
-        return jsonify({'message': 'User already exists'}), 400
+        return jsonify({"message": "User already exists"}), 400
 
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
     verification_token = secrets.token_urlsafe(32)
     new_user = User(username=username, password=hashed_password, verification_token=verification_token)
     db.session.add(new_user)
@@ -78,38 +89,38 @@ def register():
 
     # Send verification email
     verification_link = f"{request.host_url}verify/{verification_token}"
-    msg = Message("Verify Your Email", sender=app.config['MAIL_USERNAME'], recipients=[username])
+    msg = Message("Verify Your Email", sender=app.config["MAIL_USERNAME"], recipients=[username])
     msg.body = f"Click the link to verify your email: {verification_link}"
     mail.send(msg)
 
-    return jsonify({'message': 'User registered successfully. Check your email for verification.'}), 201
+    return jsonify({"message": "User registered successfully. Check your email for verification."}), 201
 
 # Email verification route
 @app.route('/verify/<token>', methods=['GET'])
 def verify_email(token):
     user = User.query.filter_by(verification_token=token).first()
     if not user:
-        return jsonify({'message': 'Invalid or expired verification token'}), 400
+        return jsonify({"message": "Invalid or expired verification token"}), 400
     user.is_verified = True
     user.verification_token = None
     db.session.commit()
-    return jsonify({'message': 'Email verified successfully!'}), 200
+    return jsonify({"message": "Email verified successfully!"}), 200
 
 # Login route
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    username = data.get("username")
+    password = data.get("password")
 
     user = User.query.filter_by(username=username).first()
     if not user or not bcrypt.check_password_hash(user.password, password):
-        return jsonify({'message': 'Invalid credentials'}), 401
+        return jsonify({"message": "Invalid credentials"}), 401
     if not user.is_verified:
-        return jsonify({'message': 'Please verify your email before logging in'}), 403
+        return jsonify({"message": "Please verify your email before logging in"}), 403
 
     access_token = create_access_token(identity=username)
-    return jsonify({'token': access_token}), 200
+    return jsonify({"token": access_token}), 200
 
 # Google OAuth Login
 @app.route('/login/google')
@@ -136,7 +147,8 @@ def authorize_google():
 @jwt_required()
 def protected():
     current_user = get_jwt_identity()
-    return jsonify({'message': f'Hello, {current_user}!'}), 200
+    return jsonify({"message": f"Hello, {current_user}!"}), 200
 
-if __name__ == '__main__':
+# ---------------------------- Run Server ----------------------------
+if __name__ == "__main__":
     app.run(debug=True)
