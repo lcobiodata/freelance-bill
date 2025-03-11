@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect
+from flask import Blueprint, request, jsonify, redirect, current_app as app
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity
 )
@@ -18,7 +18,7 @@ mail = Mail()
 routes_bp = Blueprint("routes", __name__)
 
 # -------------------- Helper Functions --------------------
-def send_verification_email(email: str, token: str, app):
+def send_verification_email(email: str, token: str):
     """
     Sends a verification email with a verification link.
     """
@@ -28,13 +28,12 @@ def send_verification_email(email: str, token: str, app):
         subject="Verify your FreelanceBill account",
         recipients=[email],
         body=f"Please click the link below to verify your account:\n{verification_link}\n\n"
-             f"If you did not register, ignore this email."
+             f"If you did not register, you can safely ignore this email."
     )
 
-    with app.app_context():
-        mail.send(msg)
+    mail.send(msg)
 
-def send_password_recovery_email(email: str, token: str, app):
+def send_password_recovery_email(email: str, token: str):
     """
     Sends a password recovery email with a reset link.
     """
@@ -43,80 +42,96 @@ def send_password_recovery_email(email: str, token: str, app):
     msg = Message(
         subject="Reset your FreelanceBill password",
         recipients=[email],
-        body=f"To reset your password, click the link below:\n{reset_link}\n\n"
-             f"If you did not request this, ignore this email."
+        body=f"To reset your password, please click the link below:\n{reset_link}\n\n"
+             f"If you did not request a password reset, you can safely ignore this email."
     )
 
-    with app.app_context():
-        mail.send(msg)
+    mail.send(msg)
 
 # -------------------- Routes --------------------
-@routes_bp.route("/")
-def home():
-    return "Welcome to FreelanceBill!", 200
-
 @routes_bp.route("/register", methods=["POST"])
 def register():
     """
-    Registers a new user and sends a verification email.
+    Registers a new user. Generates a verification token and sends an email
+    with the link to verify.
     """
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
 
+    # Check if user exists
     if User.query.filter_by(username=username).first():
         return jsonify({"message": "User already exists"}), 400
 
+    # Hash password
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    # Generate a token for verification
     verification_token = secrets.token_urlsafe(32)
 
-    new_user = User(username=username, password=hashed_password, is_verified=False, verification_token=verification_token)
+    # Create the new user with is_verified=False
+    new_user = User(
+        username=username,
+        password=hashed_password,
+        is_verified=False,
+        verification_token=verification_token
+    )
     db.session.add(new_user)
     db.session.commit()
 
-    send_verification_email(username, verification_token, request.app)
+    # Send a verification email
+    send_verification_email(username, verification_token)
 
-    return jsonify({"message": "User registered. Check your email to verify."}), 201
+    return jsonify({"message": "User registered. Please check your email to verify."}), 201
+
 
 @routes_bp.route("/verify/<token>", methods=["GET"])
 def verify_email(token):
     """
-    Verifies the user's email if the token matches.
+    Verifies the user's email address if the token matches.
     """
     user = User.query.filter_by(verification_token=token).first()
     if not user:
         return jsonify({"message": "Invalid verification token."}), 400
 
+    # Mark the user as verified
     user.is_verified = True
     user.verification_token = None
     db.session.commit()
 
+    # Redirect to the frontend verification success page
     return redirect(f'{Config.FRONTEND_URL}/verify-success', code=302)
+
 
 @routes_bp.route("/login", methods=["POST"])
 def login():
     """
-    Logs in the user with JWT authentication.
+    Traditional login route. Checks if user is verified before issuing JWT.
     """
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
 
     user = User.query.filter_by(username=username).first()
-    if not user or not bcrypt.check_password_hash(user.password, password):
+    if not user:
         return jsonify({"message": "Invalid credentials"}), 401
 
+    # OPTIONAL: If you want to enforce verification:
     if not user.is_verified:
-        return jsonify({"message": "Email not verified. Check your inbox."}), 403
+        return jsonify({"message": "Email not verified. Please check your inbox."}), 403
+
+    if not bcrypt.check_password_hash(user.password, password):
+        return jsonify({"message": "Invalid credentials"}), 401
 
     access_token = create_access_token(identity=username)
     return jsonify({"token": access_token}), 200
+
 
 @routes_bp.route("/change-password", methods=["POST"])
 @jwt_required()
 def change_password():
     """
-    Allows authenticated users to change their password.
+    Change password route. Requires JWT for authentication.
     """
     data = request.get_json()
     current_password = data.get("current_password")
@@ -137,10 +152,11 @@ def change_password():
 
     return jsonify({"message": "Password changed successfully"}), 200
 
+
 @routes_bp.route("/recover-password", methods=["POST"])
 def recover_password():
     """
-    Initiates password recovery by sending an email with a reset link.
+    Password recovery route. Sends an email with a link to reset the password.
     """
     data = request.get_json()
     email = data.get("email")
@@ -149,18 +165,22 @@ def recover_password():
     if not user:
         return jsonify({"message": "User not found"}), 404
 
+    # Generate a token for password recovery
     recovery_token = secrets.token_urlsafe(32)
     user.verification_token = recovery_token
     db.session.commit()
 
-    send_password_recovery_email(email, recovery_token, request.app)
+    # Send a password recovery email
+    send_password_recovery_email(email, recovery_token)
 
     return jsonify({"message": "Password recovery email sent"}), 200
+
 
 @routes_bp.route("/login/google", methods=["POST"])
 def login_google():
     """
-    Handles Google OAuth login.
+    Client-side Google OAuth login flow.
+    Expects JSON payload: {"token": "<Google ID token>"}
     """
     data = request.get_json()
     if not data or "token" not in data:
@@ -168,37 +188,28 @@ def login_google():
 
     id_token_str = data["token"]
     try:
+        # Verify the token using google-auth
         id_info = google.oauth2.id_token.verify_oauth2_token(
             id_token_str,
             google.auth.transport.requests.Request(),
             Config.GOOGLE_CLIENT_ID
         )
-
+        # Extract the email (unique identifier)
         email = id_info.get("email")
         if not email:
             return jsonify({"error": "Email not provided by Google"}), 400
 
+        # Create or fetch the user, mark as verified automatically (since Google verified)
         user = User.query.filter_by(username=email).first()
         if not user:
             user = User(username=email, password=None, is_verified=True)
             db.session.add(user)
             db.session.commit()
 
+        # Generate our own JWT for the user
         access_token = create_access_token(identity=email)
         return jsonify({"token": access_token, "user": {"email": email}}), 200
 
     except ValueError:
+        # Token verification failed
         return jsonify({"error": "Invalid or expired ID token"}), 401
-
-# # Protected route example
-# @app.route("/protected", methods=["GET"])
-# @jwt_required()
-# def protected():
-#     """
-#     Protected route example. Only accessible if you have a valid JWT.
-#     """
-#     current_user = get_jwt_identity()
-#     return jsonify({"message": f"Hello, {current_user}!"}), 200
-
-
-# -------------------- Run --------------------
