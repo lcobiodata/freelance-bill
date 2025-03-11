@@ -2,16 +2,16 @@ import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#1565C0" },   // Deep blue for professionalism
-    secondary: { main: "#FF6F00" }, // Vibrant orange for energy & action
-    background: { default: "#F9FAFB" }, // Soft grayish-white for a clean UI
-    success: { main: "#2E7D32" },  // Green for successful transactions
-    error: { main: "#D32F2F" },  // Red for error alerts
-    warning: { main: "#ED6C02" }, // Orange for important notices
-    info: { main: "#0288D1" },  // Blue for informational messages
+    primary: { main: "#0A84C1" },   // Adjusted blue from the logo
+    secondary: { main: "#2E4A62" }, // Darker blue-gray for contrast
+    background: { default: "#F4F7FA" }, // Light grayish-blue for a clean look
+    success: { main: "#30A14E" },  // Softer green for positive actions
+    error: { main: "#E63946" },  // Slightly muted red for errors
+    warning: { main: "#E7A218" }, // Warm yellow-orange for warnings
+    info: { main: "#1E88E5" },  // Refined blue for informational messages
   },
   typography: {
-    fontFamily: "Roboto, sans-serif",
+    fontFamily: "Inter, sans-serif",  // A modern, clean font
     h1: { fontWeight: 700 },
     h2: { fontWeight: 600 },
     h3: { fontWeight: 500 },
