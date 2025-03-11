@@ -18,6 +18,8 @@ const Login = () => {
     }
   };
 
+  console.log("Rendering Login component");
+
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h2>Login</h2>
