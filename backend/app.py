@@ -66,6 +66,24 @@ def send_verification_email(email: str, token: str):
 
     mail.send(msg)
 
+def send_password_recovery_email(email: str, token: str):
+    """
+    Sends a password recovery email containing a link to /reset-password/<token>.
+    """
+    reset_link = (
+        f"{app.config['PREFERRED_URL_SCHEME']}://{app.config['SERVER_NAME']}/reset-password/{token}"
+    )
+
+    msg = Message(
+        subject="Reset your FreelanceBill password",
+        recipients=[email],  # Send to the user's email
+        body=f"To reset your password, please click the link below:\n"
+             f"{reset_link}\n\n"
+             f"If you did not request a password reset, you can safely ignore this email."
+    )
+
+    mail.send(msg)
+
 
 # -------------------- Routes --------------------
 @app.route("/")
@@ -177,6 +195,29 @@ def change_password():
     db.session.commit()
 
     return jsonify({"message": "Password changed successfully"}), 200
+
+
+@app.route("/recover-password", methods=["POST"])
+def recover_password():
+    """
+    Password recovery route. Sends an email with a link to reset the password.
+    """
+    data = request.get_json()
+    email = data.get("email")
+
+    user = User.query.filter_by(username=email).first()
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Generate a token for password recovery
+    recovery_token = secrets.token_urlsafe(32)
+    user.verification_token = recovery_token
+    db.session.commit()
+
+    # Send a password recovery email
+    send_password_recovery_email(email, recovery_token)
+
+    return jsonify({"message": "Password recovery email sent"}), 200
 
 
 @app.route("/login/google", methods=["POST"])
