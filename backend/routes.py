@@ -176,6 +176,49 @@ def recover_password():
     return jsonify({"message": "Password recovery email sent"}), 200
 
 
+@routes_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    """
+    Resets the user's password if the token matches.
+    """
+    user = User.query.filter_by(verification_token=token).first()
+    if not user:
+        return jsonify({"message": "Invalid or expired token."}), 400
+
+    if request.method == "POST":
+        data = request.form
+        new_password = data.get("new_password")
+        confirm_password = data.get("confirm_password")
+
+        if not new_password or not confirm_password:
+            return jsonify({"message": "Both password fields are required."}), 400
+
+        if new_password != confirm_password:
+            return jsonify({"message": "Passwords do not match."}), 400
+
+        # Hash the new password and update the user
+        hashed_new_password = bcrypt.generate_password_hash(new_password).decode("utf-8")
+        user.password = hashed_new_password
+        user.verification_token = None  # Clear the token after successful reset
+        db.session.commit()
+
+        return jsonify({"message": "Password reset successful."}), 200
+
+    # Render the password reset form
+    return render_template_string('''
+        <!doctype html>
+        <title>Reset Password</title>
+        <h1>Reset Password</h1>
+        <form method="post">
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password" required><br>
+            <label for="confirm_password">Confirm Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password" required><br>
+            <button type="submit">Reset Password</button>
+        </form>
+    ''')
+
+
 @routes_bp.route("/login/google", methods=["POST"])
 def login_google():
     """
@@ -213,3 +256,33 @@ def login_google():
     except ValueError:
         # Token verification failed
         return jsonify({"error": "Invalid or expired ID token"}), 401
+
+
+@routes_bp.route("/update-email", methods=["POST"])
+@jwt_required()
+def update_email():
+    """
+    Update email route. Requires JWT for authentication.
+    """
+    data = request.get_json()
+    new_email = data.get("new_email")
+
+    if not new_email:
+        return jsonify({"message": "New email is required"}), 400
+
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    if User.query.filter_by(username=new_email).first():
+        return jsonify({"message": "Email already in use"}), 400
+
+    user.username = new_email
+    user.is_verified = False  # Mark the new email as unverified
+    verification_token = secrets.token_urlsafe(32)
+    user.verification_token = verification_token
+    db.session.commit()
+
+    # Send a verification email to the new email address
+    send_verification_email(new_email, verification_token)
+
+    return jsonify({"message": "Email updated successfully. Please verify your new email."}), 200
