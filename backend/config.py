@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    # Frontend URL
+    FRONTEND_URL = os.getenv("FRONTEND_URL")
+    
     # General Flask Config
     SECRET_KEY = os.getenv("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
