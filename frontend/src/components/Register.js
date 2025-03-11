@@ -68,6 +68,9 @@ const Register = () => {
         <Typography variant="body2" sx={{ mt: 2 }}>
           Already have an account? <Link to="/login">Login here</Link>.
         </Typography>
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          <Link to="/">Back to Home</Link>
+        </Typography>
       </Paper>
     </Container>
   );
