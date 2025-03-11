@@ -153,6 +153,32 @@ def login():
     return jsonify({"token": access_token}), 200
 
 
+@app.route("/change-password", methods=["POST"])
+@jwt_required()
+def change_password():
+    """
+    Change password route. Requires JWT for authentication.
+    """
+    data = request.get_json()
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+
+    if not current_password or not new_password:
+        return jsonify({"message": "Current password and new password are required"}), 400
+
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    if not bcrypt.check_password_hash(user.password, current_password):
+        return jsonify({"message": "Current password is incorrect"}), 401
+
+    hashed_new_password = bcrypt.generate_password_hash(new_password).decode("utf-8")
+    user.password = hashed_new_password
+    db.session.commit()
+
+    return jsonify({"message": "Password changed successfully"}), 200
+
+
 @app.route("/login/google", methods=["POST"])
 def login_google():
     """
