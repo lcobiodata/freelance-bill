@@ -4,8 +4,10 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
+from flask_mail import Mail, Message
 from dotenv import load_dotenv
 import os
+import secrets
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,12 +21,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv('SQLALCHEMY_TRACK_MODIF
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
 # Initialize extensions
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 oauth = OAuth(app)
+mail = Mail(app)
 
 google = oauth.register(
     name="google",
@@ -40,6 +48,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=True)  # Nullable for OAuth users
+    is_verified = db.Column(db.Boolean, default=False)
+    verification_token = db.Column(db.String(100), unique=True, nullable=True)
 
 # Initialize database
 with app.app_context():
@@ -50,7 +60,7 @@ with app.app_context():
 def home():
     return 'Welcome to BillEase!', 200
 
-# Register route
+# Register route with email verification
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -61,11 +71,29 @@ def register():
         return jsonify({'message': 'User already exists'}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, password=hashed_password)
+    verification_token = secrets.token_urlsafe(32)
+    new_user = User(username=username, password=hashed_password, verification_token=verification_token)
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    # Send verification email
+    verification_link = f"{request.host_url}verify/{verification_token}"
+    msg = Message("Verify Your Email", sender=app.config['MAIL_USERNAME'], recipients=[username])
+    msg.body = f"Click the link to verify your email: {verification_link}"
+    mail.send(msg)
+
+    return jsonify({'message': 'User registered successfully. Check your email for verification.'}), 201
+
+# Email verification route
+@app.route('/verify/<token>', methods=['GET'])
+def verify_email(token):
+    user = User.query.filter_by(verification_token=token).first()
+    if not user:
+        return jsonify({'message': 'Invalid or expired verification token'}), 400
+    user.is_verified = True
+    user.verification_token = None
+    db.session.commit()
+    return jsonify({'message': 'Email verified successfully!'}), 200
 
 # Login route
 @app.route('/login', methods=['POST'])
@@ -77,6 +105,8 @@ def login():
     user = User.query.filter_by(username=username).first()
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({'message': 'Invalid credentials'}), 401
+    if not user.is_verified:
+        return jsonify({'message': 'Please verify your email before logging in'}), 403
 
     access_token = create_access_token(identity=username)
     return jsonify({'token': access_token}), 200
@@ -94,7 +124,7 @@ def authorize_google():
     
     user = User.query.filter_by(username=user_info["email"]).first()
     if not user:
-        new_user = User(username=user_info["email"], password=None)  # No password for OAuth users
+        new_user = User(username=user_info["email"], password=None, is_verified=True)
         db.session.add(new_user)
         db.session.commit()
     
