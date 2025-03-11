@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, redirect
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -131,8 +131,8 @@ def verify_email(token):
     user.verification_token = None
     db.session.commit()
 
-    return jsonify({"message": "Email verified successfully. You can now log in."}), 200
-
+    # Instead of returning JSON, redirect to your React login page (or a "verified" page)
+    return redirect("http://localhost:3000/login")  
 
 @app.route("/login", methods=["POST"])
 def login():
