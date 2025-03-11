@@ -1,14 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { TextField, Button, Typography, Container, Paper, Box, Alert } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Typography,
+  Container,
+  Paper,
+  Box,
+  Alert,
+} from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");       // Renamed to "email" for clarity
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
@@ -16,18 +24,34 @@ const Login = () => {
   // Normal password-based login
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await axios.post(`${API_URL}/login`, { username, password });
+      const res = await axios.post(`${API_URL}/login`, {
+        username: email, // If your server expects "username", pass email as the value
+        password,
+      });
       localStorage.setItem("token", res.data.token);
-      setMessage(<Alert severity="success">Login successful! Redirecting...</Alert>);
+      setMessage(
+        <Alert severity="success">Login successful! Redirecting...</Alert>
+      );
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
-      setMessage(
-        <Alert severity="error">
-          Invalid credentials. If you are not registered, please{" "}
-          <Link to="/register">register here</Link>.
-        </Alert>
-      );
+      // Example: If your Flask code returns 403 for unverified email
+      if (err.response?.status === 403) {
+        // Or check err.response.data.message === 'Email not verified...'
+        setMessage(
+          <Alert severity="warning">
+            Your email is not verified. Please check your inbox.
+          </Alert>
+        );
+      } else {
+        setMessage(
+          <Alert severity="error">
+            Invalid credentials. If you are not registered, please{" "}
+            <Link to="/register">register here</Link>.
+          </Alert>
+        );
+      }
     }
   };
 
@@ -37,7 +61,7 @@ const Login = () => {
       // 1. The user just logged in with Google: get ID token from Google
       const idToken = credentialResponse.credential;
 
-      // 2. POST the ID token to your new /login/google endpoint
+      // 2. POST the ID token to your /login/google endpoint
       const res = await axios.post(`${API_URL}/login/google`, {
         token: idToken,
       });
@@ -45,10 +69,14 @@ const Login = () => {
       // 3. Store your own JWT
       localStorage.setItem("token", res.data.token);
 
-      setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
+      setMessage(
+        <Alert severity="success">Google login successful! Redirecting...</Alert>
+      );
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
-      setMessage(<Alert severity="error">Google login failed. Please try again.</Alert>);
+      setMessage(
+        <Alert severity="error">Google login failed. Please try again.</Alert>
+      );
     }
   };
 
@@ -61,15 +89,16 @@ const Login = () => {
           </Typography>
           {message && <Box sx={{ my: 2 }}>{message}</Box>}
 
-          {/* Traditional username/password login */}
+          {/* Traditional email/password login */}
           <form onSubmit={handleLogin}>
             <TextField
               fullWidth
-              label="Username"
+              label="Email"
+              type="email"           // Helps with basic HTML5 validation
               variant="outlined"
               margin="normal"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
             <TextField
@@ -82,7 +111,13 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+            >
               Login
             </Button>
           </form>
@@ -91,7 +126,11 @@ const Login = () => {
           <Box sx={{ my: 2 }}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => setMessage(<Alert severity="error">Google login failed.</Alert>)}
+              onError={() =>
+                setMessage(
+                  <Alert severity="error">Google login failed.</Alert>
+                )
+              }
             />
           </Box>
 
