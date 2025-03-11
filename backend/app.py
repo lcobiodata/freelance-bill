@@ -21,9 +21,9 @@ app.config.from_object(Config)
 # Initialize extensions
 Session(app)
 db.init_app(app)
-bcrypt = Bcrypt(app)
+bcrypt.init_app(app)
 jwt = JWTManager(app)
-mail = Mail(app)
+mail.init_app(app)
 migrate = Migrate(app, db)
 
 # CORS settings
