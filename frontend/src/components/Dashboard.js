@@ -1,18 +1,9 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Typography, Container, Paper, Box } from "@mui/material";
+import { Typography, Container, Paper, Box } from "@mui/material";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-
   // Retrieve token from localStorage to check authentication
   const token = localStorage.getItem("token");
-
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   return (
     <Container maxWidth="sm">
@@ -23,14 +14,6 @@ const Dashboard = () => {
         {token ? (
           <Box sx={{ mt: 3 }}>
             <Typography variant="body1">You are logged in.</Typography>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleLogout}
-              sx={{ mt: 2 }}
-            >
-              Logout
-            </Button>
           </Box>
         ) : (
           <Typography variant="body1" color="error">
