@@ -21,11 +21,14 @@ class Freelancer(db.Model):
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'))
     name = db.Column(db.String(100))
     business_name = db.Column(db.String(100))
     email = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200))
+
+    freelancer = db.relationship('Freelancer', backref='clients')
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
