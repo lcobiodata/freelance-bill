@@ -35,20 +35,37 @@ const Dashboard = () => {
   }, [token]);
 
   const fetchInvoices = async () => {
-    const response = await fetch(`${API_URL}/invoices`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await response.json();
-    setInvoices(data);
+    try {
+      const response = await fetch(`${API_URL}/invoices`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Failed to fetch invoices");
+      
+      const data = await response.json();
+      console.log("Fetched invoices:", data); // Debugging log
+      setInvoices(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      setInvoices([]);
+    }
   };
-
+  
   const fetchClients = async () => {
-    const response = await fetch(`${API_URL}/clients`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await response.json();
-    setClients(data);
+    try {
+      const response = await fetch(`${API_URL}/clients`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Failed to fetch clients");
+      
+      const data = await response.json();
+      console.log("Fetched clients:", data); // Debugging log
+      setClients(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      setClients([]);
+    }
   };
+  
 
   const markAsPaid = async (invoiceId) => {
     await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, {
