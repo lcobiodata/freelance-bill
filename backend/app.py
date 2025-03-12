@@ -27,9 +27,7 @@ mail = Mail(app)
 migrate = Migrate(app, db)
 
 # CORS settings
-CORS(app, supports_credentials=True, origins=[
-    f"http://{os.getenv('SERVER_NAME').split(':')[0]}:3000"
-])
+CORS(app, supports_credentials=True, origins=[Config.FRONTEND_URL])
 
 # Register Blueprint for routes
 app.register_blueprint(routes_bp)
