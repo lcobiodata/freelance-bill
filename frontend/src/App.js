@@ -14,7 +14,9 @@ import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import EmailVerificationSuccess from "./components/EmailVerificationSuccess";
 import ForgotPassword from "./components/ForgotPassword";
-import ResetPassword from "./components/ResetPassword"; // Import the ResetPassword component
+import ResetPassword from "./components/ResetPassword";
+import CreateInvoiceForm from "./components/CreateInvoiceForm";
+import AddClientForm from "./components/AddClientForm";
 
 const Navbar = () => {
   const token = localStorage.getItem("token");
@@ -70,7 +72,9 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/verify-success" element={<EmailVerificationSuccess />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} /> {/* New route for ResetPassword */}
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/create-invoice" element={<CreateInvoiceForm />} />
+          <Route path="/add-client" element={<AddClientForm />} />
         </Routes>
       </Container>
       <Footer />
