@@ -60,13 +60,19 @@ def get_invoices():
         "issue_date": inv.issue_date,
         "due_date": inv.due_date,
         "total_amount": inv.total_amount,
-        "status": inv.status
+        "status": inv.status,
+        "items": [{
+            "description": item.description,
+            "quantity": item.quantity,
+            "rate": item.rate,
+            "amount": item.amount
+        } for item in inv.items]
     } for inv in invoices]), 200
 
 @routes_bp.route("/invoice", methods=["POST"])
 @jwt_required()
 def create_invoice():
-    """ Create a new invoice """
+    """ Create a new invoice with line items """
     data = request.get_json()
     client_id = data.get("client_id")
     issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
@@ -76,6 +82,7 @@ def create_invoice():
     discount = data.get("discount", 0.0)
     total_amount = data.get("total_amount")
     status = data.get("status", "Unpaid")
+    items = data.get("items", [])
 
     invoice = Invoice(
         invoice_number=secrets.token_hex(5),
@@ -89,8 +96,52 @@ def create_invoice():
         status=status
     )
     db.session.add(invoice)
+    db.session.flush()  # Ensure invoice ID is generated before adding items
+
+    for item in items:
+        invoice_item = InvoiceItem(
+            invoice_id=invoice.id,
+            description=item.get("description"),
+            quantity=item.get("quantity"),
+            rate=item.get("rate"),
+            amount=item.get("amount")
+        )
+        db.session.add(invoice_item)
+
     db.session.commit()
     return jsonify({"message": "Invoice created successfully", "invoice_id": invoice.id}), 201
+
+@routes_bp.route("/invoice/<int:invoice_id>/items", methods=["POST"])
+@jwt_required()
+def add_invoice_item(invoice_id):
+    """ Add an item to an existing invoice """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+
+    data = request.get_json()
+    invoice_item = InvoiceItem(
+        invoice_id=invoice_id,
+        description=data.get("description"),
+        quantity=data.get("quantity"),
+        rate=data.get("rate"),
+        amount=data.get("amount")
+    )
+    db.session.add(invoice_item)
+    db.session.commit()
+    return jsonify({"message": "Item added successfully"}), 201
+
+@routes_bp.route("/invoice/item/<int:item_id>", methods=["DELETE"])
+@jwt_required()
+def delete_invoice_item(item_id):
+    """ Delete an invoice item """
+    item = InvoiceItem.query.get(item_id)
+    if not item:
+        return jsonify({"message": "Item not found"}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"message": "Item deleted successfully"}), 200
+
 
 @routes_bp.route("/invoice/<int:invoice_id>", methods=["DELETE"])
 @jwt_required()
@@ -102,6 +153,7 @@ def delete_invoice(invoice_id):
     db.session.delete(invoice)
     db.session.commit()
     return jsonify({"message": "Invoice deleted successfully"}), 200
+
 
 # -------------------- Client Routes --------------------
 @routes_bp.route("/clients", methods=["GET"])
