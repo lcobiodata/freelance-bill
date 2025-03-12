@@ -21,7 +21,7 @@ def send_verification_email(email: str, token: str):
     """
     Sends an email with a verification link that redirects to the React frontend.
     """
-    verification_link = f"{Config.FRONTEND_URL}/verify-success"
+    verification_link = f"{Config.PREFERRED_URL_SCHEME}://{Config.SERVER_NAME}/verify/{token}"
 
     msg = Message(
         subject="Verify Your FreelanceBill Account",
