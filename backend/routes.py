@@ -159,9 +159,14 @@ def delete_invoice(invoice_id):
 @routes_bp.route("/clients", methods=["GET"])
 @jwt_required()
 def get_clients():
-    """ Fetch all clients """
+    """ Fetch all clients for the logged-in freelancer """
     try:
-        clients = Client.query.all()
+        current_user = get_jwt_identity()
+        freelancer = Freelancer.query.filter_by(user_id=current_user).first()
+        if not freelancer:
+            return jsonify({"message": "Freelancer not found"}), 404
+
+        clients = Client.query.filter_by(freelancer_id=freelancer.id).all()
         return jsonify([{
             "id": c.id,
             "name": c.name or "Unknown",
@@ -177,18 +182,28 @@ def get_clients():
 @routes_bp.route("/client", methods=["POST"])
 @jwt_required()
 def create_client():
-    """ Add a new client """
-    data = request.get_json()
-    new_client = Client(
-        name=data.get("name"),
-        business_name=data.get("business_name"),
-        email=data.get("email"),
-        phone=data.get("phone"),
-        address=data.get("address")
-    )
-    db.session.add(new_client)
-    db.session.commit()
-    return jsonify({"message": "Client added successfully", "client_id": new_client.id}), 201
+    """ Add a new client for the logged-in freelancer """
+    try:
+        current_user = get_jwt_identity()
+        freelancer = Freelancer.query.filter_by(user_id=current_user).first()
+        if not freelancer:
+            return jsonify({"message": "Freelancer not found"}), 404
+
+        data = request.get_json()
+        new_client = Client(
+            freelancer_id=freelancer.id, # Associate the client with the logged-in freelancer,
+            name=data.get("name"),
+            business_name=data.get("business_name"),
+            email=data.get("email"),
+            phone=data.get("phone"),
+            address=data.get("address")
+        )
+        db.session.add(new_client)
+        db.session.commit()
+        return jsonify({"message": "Client added successfully", "client_id": new_client.id}), 201
+    except Exception as e:
+        print(f"Error creating client: {e}")
+        return jsonify({"message": "Error creating client"}), 500
 
 @routes_bp.route("/client/<int:client_id>", methods=["DELETE"])
 @jwt_required()
