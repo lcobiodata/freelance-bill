@@ -52,22 +52,22 @@ def send_password_recovery_email(email: str, token: str):
 @jwt_required()
 def get_invoices():
     """ Fetch all invoices for the authenticated user """
-    current_user = get_jwt_identity()
-    invoices = Invoice.query.join(Client).filter(Client.email == current_user).all()
-    return jsonify([{
-        "invoice_number": inv.invoice_number,
-        "client": inv.client.name,
-        "issue_date": inv.issue_date,
-        "due_date": inv.due_date,
-        "total_amount": inv.total_amount,
-        "status": inv.status,
-        "items": [{
-            "description": item.description,
-            "quantity": item.quantity,
-            "rate": item.rate,
-            "amount": item.amount
-        } for item in inv.items]
-    } for inv in invoices]), 200
+    try:
+        current_user = get_jwt_identity()
+        invoices = Invoice.query.join(Client).filter(Client.email == current_user).all()
+
+        return jsonify([{
+            "invoice_number": inv.invoice_number or "N/A",
+            "client": inv.client.name if inv.client else "Unknown",
+            "issue_date": inv.issue_date.strftime("%Y-%m-%d") if inv.issue_date else "N/A",
+            "due_date": inv.due_date.strftime("%Y-%m-%d") if inv.due_date else "N/A",
+            "total_amount": inv.total_amount or 0.0,
+            "status": inv.status or "Pending",
+        } for inv in invoices]), 200
+
+    except Exception as e:
+        print(f"Error fetching invoices: {e}")  # Log to console
+        return jsonify({"message": "Error retrieving invoices"}), 500
 
 @routes_bp.route("/invoice", methods=["POST"])
 @jwt_required()
@@ -160,8 +160,19 @@ def delete_invoice(invoice_id):
 @jwt_required()
 def get_clients():
     """ Fetch all clients """
-    clients = Client.query.all()
-    return jsonify([{ "id": c.id, "name": c.name, "email": c.email } for c in clients]), 200
+    try:
+        clients = Client.query.all()
+        return jsonify([{
+            "id": c.id,
+            "name": c.name or "Unknown",
+            "business_name": c.business_name or "N/A",
+            "email": c.email or "N/A",
+            "phone": c.phone or "N/A",
+            "address": c.address or "N/A"
+        } for c in clients]), 200
+    except Exception as e:
+        print(f"Error fetching clients: {e}")
+        return jsonify({"message": "Error retrieving clients"}), 500
 
 @routes_bp.route("/client", methods=["POST"])
 @jwt_required()
