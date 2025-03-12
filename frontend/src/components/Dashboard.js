@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Typography, Container, Paper, Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Tab } from "@mui/material";
 import { Link } from "react-router-dom";
 
+const TabPanel = ({ children, value, index }) => {
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+};
+
 const Dashboard = () => {
-  // Retrieve token from localStorage to check authentication
   const token = localStorage.getItem("token");
   const [invoices, setInvoices] = useState([]);
   const [clients, setClients] = useState([]);
+  const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
     if (token) {
@@ -43,12 +60,22 @@ const Dashboard = () => {
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
         <Typography variant="h4" gutterBottom>
-          Welcome to Your Dashboard
+          Dashboard
         </Typography>
         {token ? (
-          <>
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="h6">Invoices</Typography>
+          <Box sx={{ display: "flex", height: 400 }}>
+            <Tabs
+              orientation="vertical"
+              variant="scrollable"
+              value={tabIndex}
+              onChange={(e, newValue) => setTabIndex(newValue)}
+              aria-label="Dashboard Tabs"
+              sx={{ borderRight: 1, borderColor: "divider" }}
+            >
+              <Tab label="Invoices" />
+              <Tab label="Clients" />
+            </Tabs>
+            <TabPanel value={tabIndex} index={0}>
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
@@ -83,19 +110,11 @@ const Dashboard = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-              <Button
-                variant="contained"
-                color="secondary"
-                sx={{ mt: 2 }}
-                component={Link}
-                to="/create-invoice"
-              >
+              <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/create-invoice">
                 Create Invoice
               </Button>
-            </Box>
-
-            <Box sx={{ mt: 5 }}>
-              <Typography variant="h6">Clients</Typography>
+            </TabPanel>
+            <TabPanel value={tabIndex} index={1}>
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
@@ -114,17 +133,11 @@ const Dashboard = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-              <Button
-                variant="contained"
-                color="secondary"
-                sx={{ mt: 2 }}
-                component={Link}
-                to="/add-client"
-              >
+              <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/add-client">
                 Add Client
               </Button>
-            </Box>
-          </>
+            </TabPanel>
+          </Box>
         ) : (
           <Typography variant="body1" color="error">
             You are not logged in. Please <a href="/login">Login</a>.
