@@ -37,3 +37,4 @@ class Config:
     SERVER_NAME = os.getenv("SERVER_NAME")
     PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "http")
     FLASK_ENV = os.getenv("FLASK_ENV", "development")
+    FLASK_APP = os.getenv("FLASK_APP", "app.py")
