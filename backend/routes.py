@@ -1,7 +1,5 @@
-from flask import Blueprint, request, jsonify, redirect, render_template_string, current_app as app
-from flask_jwt_extended import (
-    create_access_token, jwt_required, get_jwt_identity
-)
+from flask import Blueprint, request, jsonify, redirect, current_app as app
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
 import secrets
 import google.auth.transport.requests
@@ -20,12 +18,12 @@ routes_bp = Blueprint("routes", __name__)
 # -------------------- Helper Functions --------------------
 def send_verification_email(email: str, token: str):
     """
-    Sends a verification email with a verification link.
+    Sends an email with a verification link that redirects to the React frontend.
     """
-    verification_link = f"{Config.PREFERRED_URL_SCHEME}://{Config.SERVER_NAME}/verify/{token}"
+    verification_link = f"{Config.FRONTEND_URL}/verify-success"
 
     msg = Message(
-        subject="Verify your FreelanceBill account",
+        subject="Verify Your FreelanceBill Account",
         recipients=[email],
         body=f"Please click the link below to verify your account:\n{verification_link}\n\n"
              f"If you did not register, you can safely ignore this email."
@@ -35,12 +33,12 @@ def send_verification_email(email: str, token: str):
 
 def send_password_recovery_email(email: str, token: str):
     """
-    Sends a password recovery email with a reset link.
+    Sends a password recovery email with a reset link to the React frontend.
     """
-    reset_link = f"{Config.PREFERRED_URL_SCHEME}://{Config.SERVER_NAME}/reset-password/{token}"
+    reset_link = f"{Config.FRONTEND_URL}/reset-password/{token}"  # Redirects to React
 
     msg = Message(
-        subject="Reset your FreelanceBill password",
+        subject="Reset Your FreelanceBill Password",
         recipients=[email],
         body=f"To reset your password, please click the link below:\n{reset_link}\n\n"
              f"If you did not request a password reset, you can safely ignore this email."
@@ -156,7 +154,7 @@ def change_password():
 @routes_bp.route("/recover-password", methods=["POST"])
 def recover_password():
     """
-    Password recovery route. Sends an email with a link to reset the password.
+    Sends a password recovery email with a link to the React reset password page.
     """
     data = request.get_json()
     email = data.get("email")
@@ -165,18 +163,17 @@ def recover_password():
     if not user:
         return jsonify({"message": "User not found"}), 404
 
-    # Generate a token for password recovery
+    # Generate a password reset token
     recovery_token = secrets.token_urlsafe(32)
     user.verification_token = recovery_token
     db.session.commit()
 
-    # Send a password recovery email
+    # Send the password recovery email with a React frontend link
     send_password_recovery_email(email, recovery_token)
 
-    return jsonify({"message": "Password recovery email sent"}), 200
+    return jsonify({"message": "Password recovery email sent. Please check your inbox."}), 200
 
-
-@routes_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+@routes_bp.route("/reset-password/<token>", methods=["POST"])
 def reset_password(token):
     """
     Resets the user's password if the token matches.
@@ -185,39 +182,23 @@ def reset_password(token):
     if not user:
         return jsonify({"message": "Invalid or expired token."}), 400
 
-    if request.method == "POST":
-        data = request.form
-        new_password = data.get("new_password")
-        confirm_password = data.get("confirm_password")
+    data = request.get_json()
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
 
-        if not new_password or not confirm_password:
-            return jsonify({"message": "Both password fields are required."}), 400
+    if not new_password or not confirm_password:
+        return jsonify({"message": "Both password fields are required."}), 400
 
-        if new_password != confirm_password:
-            return jsonify({"message": "Passwords do not match."}), 400
+    if new_password != confirm_password:
+        return jsonify({"message": "Passwords do not match."}), 400
 
-        # Hash the new password and update the user
-        hashed_new_password = bcrypt.generate_password_hash(new_password).decode("utf-8")
-        user.password = hashed_new_password
-        user.verification_token = None  # Clear the token after successful reset
-        db.session.commit()
+    # Hash the new password and update the user
+    hashed_new_password = bcrypt.generate_password_hash(new_password).decode("utf-8")
+    user.password = hashed_new_password
+    user.verification_token = None  # Clear the token after successful reset
+    db.session.commit()
 
-        return jsonify({"message": "Password reset successful."}), 200
-
-    # Render the password reset form
-    return render_template_string('''
-        <!doctype html>
-        <title>Reset Password</title>
-        <h1>Reset Password</h1>
-        <form method="post">
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required><br>
-            <label for="confirm_password">Confirm Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required><br>
-            <button type="submit">Reset Password</button>
-        </form>
-    ''')
-
+    return jsonify({"message": "Password reset successful. You can now log in."}), 200
 
 @routes_bp.route("/login/google", methods=["POST"])
 def login_google():
