@@ -4,22 +4,17 @@ import { Link } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const TabPanel = ({ children, value, index }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`vertical-tabpanel-${index}`}
-      aria-labelledby={`vertical-tab-${index}`}
-    >
-      {value === index && (
-        <Box sx={{ p: 3, overflow: "auto" }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-};
+const TabPanel = ({ children, value, index }) => (
+  <div
+    role="tabpanel"
+    hidden={value !== index}
+    id={`vertical-tabpanel-${index}`}
+    aria-labelledby={`vertical-tab-${index}`}
+    style={{ flexGrow: 1, overflow: "auto", width: "100%" }}
+  >
+    {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+  </div>
+);
 
 const Dashboard = () => {
   const token = localStorage.getItem("token");
@@ -42,14 +37,9 @@ const Dashboard = () => {
       const response = await fetch(`${API_URL}/invoices`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) throw new Error(`Failed to fetch invoices: ${response.statusText}`);
-
-      const data = await response.json();
-      console.log("Fetched invoices:", data);
-      setInvoices(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
+      if (!response.ok) throw new Error(response.statusText);
+      setInvoices(await response.json());
+    } catch {
       setInvoices([]);
     }
     setLoadingInvoices(false);
@@ -61,14 +51,9 @@ const Dashboard = () => {
       const response = await fetch(`${API_URL}/clients`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) throw new Error(`Failed to fetch clients: ${response.statusText}`);
-
-      const data = await response.json();
-      console.log("Fetched clients:", data);
-      setClients(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
+      if (!response.ok) throw new Error(response.statusText);
+      setClients(await response.json());
+    } catch {
       setClients([]);
     }
     setLoadingClients(false);
@@ -89,23 +74,20 @@ const Dashboard = () => {
           Dashboard
         </Typography>
         {token ? (
-          <Box sx={{ display: "flex", flexDirection: "row", height: "auto", minHeight: 500, overflow: "hidden" }}>
+          <Box sx={{ display: "flex", minHeight: 500, overflow: "hidden" }}>
             <Tabs
               orientation="vertical"
-              variant="scrollable"
               value={tabIndex}
-              onChange={(e, newValue) => setTabIndex(newValue)}
-              aria-label="Dashboard Tabs"
+              onChange={(e, v) => setTabIndex(v)}
               sx={{ borderRight: 1, borderColor: "divider", minWidth: 180 }}
             >
               <Tab label="Clients" />
               <Tab label="Invoices" />
             </Tabs>
 
-            {/* Clients Section */}
             <TabPanel value={tabIndex} index={0}>
-              <TableContainer component={Paper} sx={{ maxHeight: 400, overflow: "auto" }}>
-                <Table stickyHeader>
+              <TableContainer component={Paper} sx={{ height: 400, width: "100%", overflow: "auto" }}>
+                <Table stickyHeader sx={{ minWidth: 800 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Name</TableCell>
@@ -141,10 +123,9 @@ const Dashboard = () => {
               </Button>
             </TabPanel>
 
-            {/* Invoices Section */}
             <TabPanel value={tabIndex} index={1}>
-              <TableContainer component={Paper} sx={{ maxHeight: 400, overflow: "auto" }}>
-                <Table stickyHeader>
+              <TableContainer component={Paper} sx={{ height: 400, width: "100%", overflow: "auto" }}>
+                <Table stickyHeader sx={{ minWidth: 800 }}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Invoice #</TableCell>
@@ -161,7 +142,7 @@ const Dashboard = () => {
                           <CircularProgress />
                         </TableCell>
                       </TableRow>
-                    ) : invoices.length > 0 ? (
+                    ) : (
                       invoices.map((invoice) => (
                         <TableRow key={invoice.invoice_number}>
                           <TableCell>{invoice.invoice_number}</TableCell>
@@ -170,26 +151,17 @@ const Dashboard = () => {
                           <TableCell>{invoice.status}</TableCell>
                           <TableCell>
                             {invoice.status !== "Paid" && (
-                              <Button variant="contained" color="primary" onClick={() => markAsPaid(invoice.invoice_number)}>
+                              <Button variant="contained" onClick={() => markAsPaid(invoice.invoice_number)}>
                                 Mark as Paid
                               </Button>
                             )}
                           </TableCell>
                         </TableRow>
                       ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} align="center">
-                          No invoices found.
-                        </TableCell>
-                      </TableRow>
                     )}
                   </TableBody>
                 </Table>
               </TableContainer>
-              <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/create-invoice">
-                Create Invoice
-              </Button>
             </TabPanel>
           </Box>
         ) : (
