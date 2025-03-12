@@ -5,7 +5,7 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User, Client, Invoice, InvoiceItem
+from models import db, User, Freelancer, Client, Invoice, InvoiceItem
 from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
@@ -191,7 +191,7 @@ def create_client():
 
         data = request.get_json()
         new_client = Client(
-            freelancer_id=freelancer.id, # Associate the client with the logged-in freelancer,
+            freelancer_id=freelancer.id,  # Associate the client with the logged-in freelancer
             name=data.get("name"),
             business_name=data.get("business_name"),
             email=data.get("email"),
@@ -203,7 +203,7 @@ def create_client():
         return jsonify({"message": "Client added successfully", "client_id": new_client.id}), 201
     except Exception as e:
         print(f"Error creating client: {e}")
-        return jsonify({"message": "Error creating client"}), 500
+        return jsonify({"message": f"Error creating client: {e}"}), 500
 
 @routes_bp.route("/client/<int:client_id>", methods=["DELETE"])
 @jwt_required()
