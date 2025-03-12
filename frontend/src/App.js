@@ -64,7 +64,7 @@ const App = () => {
   return (
     <Router>
       <Navbar />
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth={false} sx={{ py: 4, display: "inline-block" }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
