@@ -5,9 +5,10 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User
+from models import db, User, Client, Invoice, InvoiceItem
 from flask_mail import Message, Mail
 from config import Config
+from datetime import datetime
 
 bcrypt = Bcrypt()
 mail = Mail()
@@ -46,7 +47,111 @@ def send_password_recovery_email(email: str, token: str):
 
     mail.send(msg)
 
-# -------------------- Routes --------------------
+# -------------------- Invoice Routes --------------------
+@routes_bp.route("/invoices", methods=["GET"])
+@jwt_required()
+def get_invoices():
+    """ Fetch all invoices for the authenticated user """
+    current_user = get_jwt_identity()
+    invoices = Invoice.query.join(Client).filter(Client.email == current_user).all()
+    return jsonify([{
+        "invoice_number": inv.invoice_number,
+        "client": inv.client.name,
+        "issue_date": inv.issue_date,
+        "due_date": inv.due_date,
+        "total_amount": inv.total_amount,
+        "status": inv.status
+    } for inv in invoices]), 200
+
+@routes_bp.route("/invoice", methods=["POST"])
+@jwt_required()
+def create_invoice():
+    """ Create a new invoice """
+    data = request.get_json()
+    client_id = data.get("client_id")
+    issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
+    due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
+    subtotal = data.get("subtotal")
+    tax_amount = data.get("tax_amount", 0.0)
+    discount = data.get("discount", 0.0)
+    total_amount = data.get("total_amount")
+    status = data.get("status", "Unpaid")
+
+    invoice = Invoice(
+        invoice_number=secrets.token_hex(5),
+        client_id=client_id,
+        issue_date=issue_date,
+        due_date=due_date,
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        discount=discount,
+        total_amount=total_amount,
+        status=status
+    )
+    db.session.add(invoice)
+    db.session.commit()
+    return jsonify({"message": "Invoice created successfully", "invoice_id": invoice.id}), 201
+
+@routes_bp.route("/invoice/<int:invoice_id>", methods=["DELETE"])
+@jwt_required()
+def delete_invoice(invoice_id):
+    """ Delete an invoice """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+    db.session.delete(invoice)
+    db.session.commit()
+    return jsonify({"message": "Invoice deleted successfully"}), 200
+
+# -------------------- Client Routes --------------------
+@routes_bp.route("/clients", methods=["GET"])
+@jwt_required()
+def get_clients():
+    """ Fetch all clients """
+    clients = Client.query.all()
+    return jsonify([{ "id": c.id, "name": c.name, "email": c.email } for c in clients]), 200
+
+@routes_bp.route("/client", methods=["POST"])
+@jwt_required()
+def create_client():
+    """ Add a new client """
+    data = request.get_json()
+    new_client = Client(
+        name=data.get("name"),
+        business_name=data.get("business_name"),
+        email=data.get("email"),
+        phone=data.get("phone"),
+        address=data.get("address")
+    )
+    db.session.add(new_client)
+    db.session.commit()
+    return jsonify({"message": "Client added successfully", "client_id": new_client.id}), 201
+
+@routes_bp.route("/client/<int:client_id>", methods=["DELETE"])
+@jwt_required()
+def delete_client(client_id):
+    """ Delete a client """
+    client = Client.query.get(client_id)
+    if not client:
+        return jsonify({"message": "Client not found"}), 404
+    db.session.delete(client)
+    db.session.commit()
+    return jsonify({"message": "Client deleted successfully"}), 200
+
+# -------------------- Payment Tracking --------------------
+@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])
+@jwt_required()
+def mark_invoice_paid(invoice_id):
+    """ Mark an invoice as paid """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+    invoice.status = "Paid"
+    db.session.commit()
+    return jsonify({"message": "Invoice marked as paid"}), 200
+
+
+# -------------------- Authentication Routes --------------------
 @routes_bp.route("/register", methods=["POST"])
 def register():
     """
