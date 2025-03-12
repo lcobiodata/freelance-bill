@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Typography, Container, Paper, Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Tab, TextField, MenuItem } from "@mui/material";
 import { Link } from "react-router-dom";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL; // Define API_URL constant
+const API_URL = process.env.REACT_APP_API_URL; // Define API_URL constant
 
 const TabPanel = ({ children, value, index }) => {
   return (

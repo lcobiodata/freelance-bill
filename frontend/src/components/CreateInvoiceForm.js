@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { TextField, Button, Container, Paper, Typography, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = process.env.REACT_APP_API_URL; // Define API_URL constant
+
 const CreateInvoiceForm = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -25,7 +27,7 @@ const CreateInvoiceForm = () => {
   }, []);
 
   const fetchClients = async () => {
-    const response = await fetch("/clients", {
+    const response = await fetch(`${API_URL}/clients`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json();
@@ -53,7 +55,7 @@ const CreateInvoiceForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await fetch("/invoice", {
+    await fetch(`${API_URL}/invoice`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(invoice),

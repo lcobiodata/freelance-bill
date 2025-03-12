@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import validator from "validator";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
 const Register = () => {
   const [username, setUsername] = useState("");

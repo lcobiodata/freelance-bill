@@ -3,7 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { TextField, Button, Typography, Container, Paper, Box, Alert } from "@mui/material";
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
 const ResetPassword = () => {
   const { token } = useParams();
