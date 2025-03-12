@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Tab } from "@mui/material";
+import { Typography, Container, Paper, Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, Tab, TextField, MenuItem } from "@mui/material";
 import { Link } from "react-router-dom";
+
+const API_URL = process.env.REACT_APP_BACKEND_URL; // Define API_URL constant
 
 const TabPanel = ({ children, value, index }) => {
   return (
@@ -27,13 +29,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (token) {
-      fetchInvoices();
       fetchClients();
+      fetchInvoices();
     }
   }, [token]);
 
   const fetchInvoices = async () => {
-    const response = await fetch("/api/invoices", {
+    const response = await fetch(`${API_URL}/invoices`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json();
@@ -41,7 +43,7 @@ const Dashboard = () => {
   };
 
   const fetchClients = async () => {
-    const response = await fetch("/api/clients", {
+    const response = await fetch(`${API_URL}/clients`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json();
@@ -49,7 +51,7 @@ const Dashboard = () => {
   };
 
   const markAsPaid = async (invoiceId) => {
-    await fetch(`/api/invoice/${invoiceId}/mark-paid`, {
+    await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -63,7 +65,7 @@ const Dashboard = () => {
           Dashboard
         </Typography>
         {token ? (
-          <Box sx={{ display: "flex", height: 400 }}>
+          <Box sx={{ display: "flex", height: 500 }}>
             <Tabs
               orientation="vertical"
               variant="scrollable"
@@ -72,10 +74,39 @@ const Dashboard = () => {
               aria-label="Dashboard Tabs"
               sx={{ borderRight: 1, borderColor: "divider" }}
             >
-              <Tab label="Invoices" />
               <Tab label="Clients" />
+              <Tab label="Invoices" />
             </Tabs>
             <TabPanel value={tabIndex} index={0}>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Business Name</TableCell>
+                      <TableCell>Email</TableCell>
+                      <TableCell>Phone</TableCell>
+                      <TableCell>Address</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {clients.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell>{client.name}</TableCell>
+                        <TableCell>{client.business_name}</TableCell>
+                        <TableCell>{client.email}</TableCell>
+                        <TableCell>{client.phone}</TableCell>
+                        <TableCell>{client.address}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/add-client">
+                Add Client
+              </Button>
+            </TabPanel>
+            <TabPanel value={tabIndex} index={1}>
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
@@ -112,29 +143,6 @@ const Dashboard = () => {
               </TableContainer>
               <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/create-invoice">
                 Create Invoice
-              </Button>
-            </TabPanel>
-            <TabPanel value={tabIndex} index={1}>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Email</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {clients.map((client) => (
-                      <TableRow key={client.id}>
-                        <TableCell>{client.name}</TableCell>
-                        <TableCell>{client.email}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/add-client">
-                Add Client
               </Button>
             </TabPanel>
           </Box>
