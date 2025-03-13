@@ -17,6 +17,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // Confirm Password Field
   const [name, setName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,20 +28,43 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ Function to check for strong password
+  const isStrongPassword = (password) => {
+    return validator.isStrongPassword(password, {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    });
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Client-side email format check
+    // ✅ Check if email format is valid
     if (!validator.isEmail(email)) {
+      setMessage(<Alert severity="error">Invalid email format.</Alert>);
+      return;
+    }
+
+    // ✅ Check for password strength
+    if (!isStrongPassword(password)) {
       setMessage(
         <Alert severity="error">
-          Invalid email format.
+          Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.
         </Alert>
       );
       return;
     }
 
-    setIsSubmitting(true); // disable the button while registering
+    // ✅ Check if passwords match
+    if (password !== confirmPassword) {
+      setMessage(<Alert severity="error">Passwords do not match.</Alert>);
+      return;
+    }
+
+    setIsSubmitting(true); // Disable the button while registering
 
     try {
       const res = await axios.post(`${API_URL}/register`, {
@@ -54,7 +78,7 @@ const Register = () => {
         tax_number: taxNumber,
       });
 
-      // Show a message that an email was sent and keep the button disabled
+      // ✅ Show success message and disable button
       setMessage(
         <Alert severity="success">
           {res.data.message ||
@@ -71,12 +95,10 @@ const Register = () => {
         );
       } else {
         setMessage(
-          <Alert severity="error">
-            Registration failed. Please try again.
-          </Alert>
+          <Alert severity="error">Registration failed. Please try again.</Alert>
         );
       }
-      setIsSubmitting(false); // re-enable in case of error
+      setIsSubmitting(false); // Re-enable in case of error
     }
   };
 
@@ -86,11 +108,7 @@ const Register = () => {
         <Typography variant="h4" gutterBottom>
           Create an Account
         </Typography>
-        {message && (
-          <Box sx={{ my: 2 }}>
-            {message}
-          </Box>
-        )}
+        {message && <Box sx={{ my: 2 }}>{message}</Box>}
         <form onSubmit={handleRegister}>
           <TextField
             fullWidth
@@ -110,6 +128,16 @@ const Register = () => {
             margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <TextField
+            fullWidth
+            label="Confirm Password"
+            type="password"
+            variant="outlined"
+            margin="normal"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
           />
           <TextField
