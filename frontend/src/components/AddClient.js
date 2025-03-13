@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const AddClientForm = () => {
+const AddClient = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const [client, setClient] = useState({
@@ -55,4 +55,4 @@ const AddClientForm = () => {
   );
 };
 
-export default AddClientForm;
+export default AddClient;
