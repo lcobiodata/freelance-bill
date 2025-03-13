@@ -340,6 +340,16 @@ def get_invoices():
     current_user = get_jwt_identity()
     invoices = Invoice.query.join(User).filter(User.username == current_user).all()
 
+    # Check due dates and update status if overdue
+    today = datetime.today().date()
+    for invoice in invoices:
+        if invoice.due_date < today and invoice.status == InvoiceStatus.UNPAID:
+            invoice.status = InvoiceStatus.OVERDUE
+    db.session.commit()
+
+    # Query again to ensure changes are reflected
+    invoices = Invoice.query.join(User).filter(User.username == current_user).all()
+
     return jsonify([{
         "invoice_number": invoice.invoice_number,
         "client": invoice.client.name if invoice.client else "Unknown",
