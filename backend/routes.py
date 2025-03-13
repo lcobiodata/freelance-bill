@@ -5,7 +5,7 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User, Freelancer, Client, Invoice, InvoiceItem
+from models import db, User, Client, Invoice, InvoiceItem
 from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
@@ -47,188 +47,6 @@ def send_password_recovery_email(email: str, token: str):
 
     mail.send(msg)
 
-# -------------------- Invoice Routes --------------------
-@routes_bp.route("/invoices", methods=["GET"])
-@jwt_required()
-def get_invoices():
-    """ Fetch all invoices for the authenticated user """
-    try:
-        current_user = get_jwt_identity()
-        invoices = Invoice.query.join(Client).filter(Client.email == current_user).all()
-
-        return jsonify([{
-            "invoice_number": inv.invoice_number or "N/A",
-            "client": inv.client.name if inv.client else "Unknown",
-            "issue_date": inv.issue_date.strftime("%Y-%m-%d") if inv.issue_date else "N/A",
-            "due_date": inv.due_date.strftime("%Y-%m-%d") if inv.due_date else "N/A",
-            "total_amount": inv.total_amount or 0.0,
-            "status": inv.status or "Pending",
-        } for inv in invoices]), 200
-
-    except Exception as e:
-        print(f"Error fetching invoices: {e}")  # Log to console
-        return jsonify({"message": "Error retrieving invoices"}), 500
-
-@routes_bp.route("/invoice", methods=["POST"])
-@jwt_required()
-def create_invoice():
-    """ Create a new invoice with line items """
-    data = request.get_json()
-    client_id = data.get("client_id")
-    issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
-    due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
-    subtotal = data.get("subtotal")
-    tax_amount = data.get("tax_amount", 0.0)
-    discount = data.get("discount", 0.0)
-    total_amount = data.get("total_amount")
-    status = data.get("status", "Unpaid")
-    items = data.get("items", [])
-
-    invoice = Invoice(
-        invoice_number=secrets.token_hex(5),
-        client_id=client_id,
-        issue_date=issue_date,
-        due_date=due_date,
-        subtotal=subtotal,
-        tax_amount=tax_amount,
-        discount=discount,
-        total_amount=total_amount,
-        status=status
-    )
-    db.session.add(invoice)
-    db.session.flush()  # Ensure invoice ID is generated before adding items
-
-    for item in items:
-        invoice_item = InvoiceItem(
-            invoice_id=invoice.id,
-            description=item.get("description"),
-            quantity=item.get("quantity"),
-            rate=item.get("rate"),
-            amount=item.get("amount")
-        )
-        db.session.add(invoice_item)
-
-    db.session.commit()
-    return jsonify({"message": "Invoice created successfully", "invoice_id": invoice.id}), 201
-
-@routes_bp.route("/invoice/<int:invoice_id>/items", methods=["POST"])
-@jwt_required()
-def add_invoice_item(invoice_id):
-    """ Add an item to an existing invoice """
-    invoice = Invoice.query.get(invoice_id)
-    if not invoice:
-        return jsonify({"message": "Invoice not found"}), 404
-
-    data = request.get_json()
-    invoice_item = InvoiceItem(
-        invoice_id=invoice_id,
-        description=data.get("description"),
-        quantity=data.get("quantity"),
-        rate=data.get("rate"),
-        amount=data.get("amount")
-    )
-    db.session.add(invoice_item)
-    db.session.commit()
-    return jsonify({"message": "Item added successfully"}), 201
-
-@routes_bp.route("/invoice/item/<int:item_id>", methods=["DELETE"])
-@jwt_required()
-def delete_invoice_item(item_id):
-    """ Delete an invoice item """
-    item = InvoiceItem.query.get(item_id)
-    if not item:
-        return jsonify({"message": "Item not found"}), 404
-    db.session.delete(item)
-    db.session.commit()
-    return jsonify({"message": "Item deleted successfully"}), 200
-
-
-@routes_bp.route("/invoice/<int:invoice_id>", methods=["DELETE"])
-@jwt_required()
-def delete_invoice(invoice_id):
-    """ Delete an invoice """
-    invoice = Invoice.query.get(invoice_id)
-    if not invoice:
-        return jsonify({"message": "Invoice not found"}), 404
-    db.session.delete(invoice)
-    db.session.commit()
-    return jsonify({"message": "Invoice deleted successfully"}), 200
-
-
-# -------------------- Client Routes --------------------
-@routes_bp.route("/clients", methods=["GET"])
-@jwt_required()
-def get_clients():
-    """ Fetch all clients for the logged-in freelancer """
-    try:
-        current_user = get_jwt_identity()
-        freelancer = Freelancer.query.filter_by(user_id=current_user).first()
-        if not freelancer:
-            return jsonify({"message": "Freelancer not found"}), 404
-
-        clients = Client.query.filter_by(freelancer_id=freelancer.id).all()
-        return jsonify([{
-            "id": c.id,
-            "name": c.name or "Unknown",
-            "business_name": c.business_name or "N/A",
-            "email": c.email or "N/A",
-            "phone": c.phone or "N/A",
-            "address": c.address or "N/A"
-        } for c in clients]), 200
-    except Exception as e:
-        print(f"Error fetching clients: {e}")
-        return jsonify({"message": "Error retrieving clients"}), 500
-
-@routes_bp.route("/client", methods=["POST"])
-@jwt_required()
-def create_client():
-    """ Add a new client for the logged-in freelancer """
-    try:
-        current_user = get_jwt_identity()
-        freelancer = Freelancer.query.filter_by(user_id=current_user).first()
-        if not freelancer:
-            return jsonify({"message": "Freelancer not found"}), 404
-
-        data = request.get_json()
-        new_client = Client(
-            freelancer_id=freelancer.id,  # Associate the client with the logged-in freelancer
-            name=data.get("name"),
-            business_name=data.get("business_name"),
-            email=data.get("email"),
-            phone=data.get("phone"),
-            address=data.get("address")
-        )
-        db.session.add(new_client)
-        db.session.commit()
-        return jsonify({"message": "Client added successfully", "client_id": new_client.id}), 201
-    except Exception as e:
-        print(f"Error creating client: {e}")
-        return jsonify({"message": f"Error creating client: {e}"}), 500
-
-@routes_bp.route("/client/<int:client_id>", methods=["DELETE"])
-@jwt_required()
-def delete_client(client_id):
-    """ Delete a client """
-    client = Client.query.get(client_id)
-    if not client:
-        return jsonify({"message": "Client not found"}), 404
-    db.session.delete(client)
-    db.session.commit()
-    return jsonify({"message": "Client deleted successfully"}), 200
-
-# -------------------- Payment Tracking --------------------
-@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])
-@jwt_required()
-def mark_invoice_paid(invoice_id):
-    """ Mark an invoice as paid """
-    invoice = Invoice.query.get(invoice_id)
-    if not invoice:
-        return jsonify({"message": "Invoice not found"}), 404
-    invoice.status = "Paid"
-    db.session.commit()
-    return jsonify({"message": "Invoice marked as paid"}), 200
-
-
 # -------------------- Authentication Routes --------------------
 @routes_bp.route("/register", methods=["POST"])
 def register():
@@ -239,6 +57,12 @@ def register():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
+    name = data.get("name")
+    business_name = data.get("business_name")
+    email = data.get("email")
+    phone = data.get("phone")
+    address = data.get("address")
+    tax_number = data.get("tax_number")
 
     # Check if user exists
     if User.query.filter_by(username=username).first():
@@ -255,7 +79,13 @@ def register():
         username=username,
         password=hashed_password,
         is_verified=False,
-        verification_token=verification_token
+        verification_token=verification_token,
+        name=name,
+        business_name=business_name,
+        email=email,
+        phone=phone,
+        address=address,
+        tax_number=tax_number
     )
     db.session.add(new_user)
     db.session.commit()
@@ -401,21 +231,29 @@ def login_google():
             google.auth.transport.requests.Request(),
             Config.GOOGLE_CLIENT_ID
         )
-        # Extract the email (unique identifier)
+        # Extract user information from the ID token
         email = id_info.get("email")
+        name = id_info.get("name")
+
         if not email:
             return jsonify({"error": "Email not provided by Google"}), 400
 
         # Create or fetch the user, mark as verified automatically (since Google verified)
         user = User.query.filter_by(username=email).first()
         if not user:
-            user = User(username=email, password=None, is_verified=True)
+            user = User(
+                username=email,
+                password=None,
+                is_verified=True,
+                name=name,
+                email=email,
+            )
             db.session.add(user)
             db.session.commit()
 
         # Generate our own JWT for the user
         access_token = create_access_token(identity=email)
-        return jsonify({"token": access_token, "user": {"email": email}}), 200
+        return jsonify({"token": access_token, "user": {"email": email, "name": name}}), 200
 
     except ValueError:
         # Token verification failed
@@ -450,3 +288,120 @@ def update_email():
     send_verification_email(new_email, verification_token)
 
     return jsonify({"message": "Email updated successfully. Please verify your new email."}), 200
+
+# -------------------- Invoice Routes --------------------
+@routes_bp.route("/invoices", methods=["GET"])
+@jwt_required()
+def get_invoices():
+    """ Fetch all invoices for the authenticated user """
+    current_user = get_jwt_identity()
+    invoices = Invoice.query.join(Client).filter(Client.email == current_user).all()
+
+    return jsonify([{
+        "invoice_number": inv.invoice_number or "N/A",
+        "client": inv.client.name if inv.client else "Unknown",
+        "issue_date": inv.issue_date.strftime("%Y-%m-%d") if inv.issue_date else "N/A",
+        "due_date": inv.due_date.strftime("%Y-%m-%d") if inv.due_date else "N/A",
+        "total_amount": inv.total_amount or 0.0,
+        "status": inv.status or "Pending",
+    } for inv in invoices]), 200
+
+@routes_bp.route("/invoice", methods=["POST"])
+@jwt_required()
+def create_invoice():
+    """ Create a new invoice with line items """
+    data = request.get_json()
+    client_id = data.get("client_id")
+    issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
+    due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
+    subtotal = data.get("subtotal")
+    tax_amount = data.get("tax_amount", 0.0)
+    discount = data.get("discount", 0.0)
+    total_amount = data.get("total_amount")
+    status = data.get("status", "Unpaid")
+    items = data.get("items", [])
+
+    invoice = Invoice(
+        invoice_number=secrets.token_hex(5),
+        client_id=client_id,
+        issue_date=issue_date,
+        due_date=due_date,
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        discount=discount,
+        total_amount=total_amount,
+        status=status
+    )
+    db.session.add(invoice)
+    db.session.flush()  # Ensure invoice ID is generated before adding items
+
+    for item in items:
+        invoice_item = InvoiceItem(
+            invoice_id=invoice.id,
+            description=item.get("description"),
+            quantity=item.get("quantity"),
+            rate=item.get("rate"),
+            amount=item.get("amount")
+        )
+        db.session.add(invoice_item)
+
+    db.session.commit()
+    return jsonify({"message": "Invoice created successfully", "invoice_id": invoice.id}), 201
+
+@routes_bp.route("/invoice/<int:invoice_id>/items", methods=["POST"])
+@jwt_required()
+def add_invoice_item(invoice_id):
+    """ Add an item to an existing invoice """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+
+    data = request.get_json()
+    invoice_item = InvoiceItem(
+        invoice_id=invoice_id,
+        description=data.get("description"),
+        quantity=data.get("quantity"),
+        rate=data.get("rate"),
+        amount=data.get("amount")
+    )
+    db.session.add(invoice_item)
+    db.session.commit()
+    return jsonify({"message": "Item added successfully"}), 201
+
+@routes_bp.route("/invoice/item/<int:item_id>", methods=["DELETE"])
+@jwt_required()
+def delete_invoice_item(item_id):
+    """ Delete an invoice item """
+    item = InvoiceItem.query.get(item_id)
+    if not item:
+        return jsonify({"message": "Item not found"}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"message": "Item deleted successfully"}), 200
+
+
+@routes_bp.route("/invoice/<int:invoice_id>", methods=["DELETE"])
+@jwt_required()
+def delete_invoice(invoice_id):
+    """ Delete an invoice """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+    db.session.delete(invoice)
+    db.session.commit()
+    return jsonify({"message": "Invoice deleted successfully"}), 200
+
+
+# -------------------- Payment Tracking --------------------
+@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])
+@jwt_required()
+def mark_invoice_paid(invoice_id):
+    """ Mark an invoice as paid """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+    invoice.status = "Paid"
+    db.session.commit()
+    return jsonify({"message": "Invoice marked as paid"}), 200
+
+
