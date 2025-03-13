@@ -41,6 +41,7 @@ const CreateInvoice = () => {
   const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", amount: "" });
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
+  const [errors, setErrors] = useState({}); // Track missing fields
 
   useEffect(() => {
     fetchClients();
@@ -54,31 +55,61 @@ const CreateInvoice = () => {
     setClients(data);
   };
 
+  // Handle form input changes
   const handleChange = (e) => {
     setInvoice({ ...invoice, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" }); // Clear error when typing
   };
 
   const handleItemChange = (e) => {
     setNewItem({ ...newItem, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
+  // Add item with validation
   const addItem = () => {
-    const itemAmount = parseFloat(newItem.quantity || 0) * parseFloat(newItem.rate || 0);
+    const { description, quantity, rate } = newItem;
+    const newErrors = {};
+
+    if (!description.trim()) newErrors.description = "Description is required.";
+    if (!quantity.trim()) newErrors.quantity = "Quantity is required.";
+    if (!rate.trim()) newErrors.rate = "Rate is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const itemAmount = parseFloat(quantity) * parseFloat(rate);
     const updatedItems = [...invoice.items, { ...newItem, amount: itemAmount }];
     const newSubtotal = updatedItems.reduce((sum, item) => sum + item.amount, 0);
     const tax = parseFloat(invoice.tax_amount) || 0;
     const discount = parseFloat(invoice.discount) || 0;
     const newTotal = newSubtotal + tax - discount;
-  
+
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
-  
-    // Reset item fields to be completely empty instead of 1 or 0
+
     setNewItem({ description: "", quantity: "", rate: "", amount: "" });
   };
-  
+
+  // Validate before submission
+  const validateForm = () => {
+    const newErrors = {};
+    if (!invoice.client_id) newErrors.client_id = "Client selection is required.";
+    if (!invoice.issue_date) newErrors.issue_date = "Issue date is required.";
+    if (!invoice.due_date) newErrors.due_date = "Due date is required.";
+    if (!invoice.payment_method) newErrors.payment_method = "Payment method is required.";
+    if (invoice.items.length === 0) newErrors.items = "At least one item is required.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     setIsRedirecting(true);
 
     try {
@@ -92,7 +123,6 @@ const CreateInvoice = () => {
 
       setMessage(<Alert severity="success">Invoice created successfully! Redirecting...</Alert>);
 
-      // ⏳ Wait for 2 seconds before redirecting
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       setMessage(<Alert severity="error">Failed to create invoice. Please try again.</Alert>);
@@ -105,7 +135,6 @@ const CreateInvoice = () => {
       <Paper elevation={3} sx={{ p: 4, mt: 5 }}>
         <Typography variant="h5" gutterBottom>Create Invoice</Typography>
 
-        {/* Show success or error message */}
         {message && <Box sx={{ my: 2 }}>{message}</Box>}
 
         {isRedirecting ? (
@@ -116,12 +145,14 @@ const CreateInvoice = () => {
           <>
             <TextField
               select
-              label="Select Client"
+              label="Select Client *"
               name="client_id"
               fullWidth
               margin="normal"
               value={invoice.client_id}
               onChange={handleChange}
+              error={!!errors.client_id}
+              helperText={errors.client_id}
             >
               {clients.map((client) => (
                 <MenuItem key={client.id} value={client.id}>
@@ -129,18 +160,32 @@ const CreateInvoice = () => {
                 </MenuItem>
               ))}
             </TextField>
-            <TextField label="Issue Date" type="date" name="issue_date" fullWidth margin="normal" onChange={handleChange} InputLabelProps={{ shrink: true }} />
-            <TextField label="Due Date" type="date" name="due_date" fullWidth margin="normal" onChange={handleChange} InputLabelProps={{ shrink: true }} />
+
+            <TextField label="Issue Date *" type="date" name="issue_date" fullWidth margin="normal"
+              onChange={handleChange} InputLabelProps={{ shrink: true }}
+              error={!!errors.issue_date} helperText={errors.issue_date}
+            />
+            <TextField label="Due Date *" type="date" name="due_date" fullWidth margin="normal"
+              onChange={handleChange} InputLabelProps={{ shrink: true }}
+              error={!!errors.due_date} helperText={errors.due_date}
+            />
             <TextField label="Tax Amount" type="number" name="tax_amount" fullWidth margin="normal" onChange={handleChange} />
             <TextField label="Discount" type="number" name="discount" fullWidth margin="normal" onChange={handleChange} />
-            <TextField select label="Payment Method" name="payment_method" fullWidth margin="normal" value={invoice.payment_method} onChange={handleChange}>
+
+            <TextField select label="Payment Method *" name="payment_method" fullWidth margin="normal"
+              value={invoice.payment_method} onChange={handleChange}
+              error={!!errors.payment_method} helperText={errors.payment_method}
+            >
               <MenuItem value="Cash">Cash</MenuItem>
               <MenuItem value="Credit Card">Credit Card</MenuItem>
               <MenuItem value="PayPal">PayPal</MenuItem>
               <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
             </TextField>
-            
+
             <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
+
+            {errors.items && <Alert severity="error">{errors.items}</Alert>}
+
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -164,19 +209,15 @@ const CreateInvoice = () => {
               </Table>
             </TableContainer>
 
-            {/* Item Input Fields */}
-            <TextField label="Description" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} />
-            <TextField label="Quantity" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} />
-            <TextField label="Rate" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} />
+            <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
+            <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
+            <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
 
-            {/* Buttons */}
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
               <Button variant="contained" color="primary" onClick={addItem}>Add Item</Button>
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-              <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={isRedirecting}>
-                {isRedirecting ? <CircularProgress size={24} /> : "Submit Invoice"}
-              </Button>
+              <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={isRedirecting}>Submit Invoice</Button>
             </Box>
           </>
         )}
