@@ -8,12 +8,12 @@ class User(db.Model):
     password = db.Column(db.String(256), nullable=True)  # OAuth users have no local password
     is_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(100), unique=True, nullable=True)
-    name = db.Column(db.String(100))
-    business_name = db.Column(db.String(100))
-    email = db.Column(db.String(100))
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200))
     tax_number = db.Column(db.String(50))
+    business_name = db.Column(db.String(100))
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
