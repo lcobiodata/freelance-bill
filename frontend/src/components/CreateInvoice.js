@@ -89,6 +89,7 @@ const CreateInvoice = () => {
         <TextField label="Tax Amount" type="number" name="tax_amount" fullWidth margin="normal" onChange={handleChange} />
         <TextField label="Discount" type="number" name="discount" fullWidth margin="normal" onChange={handleChange} />
         <TextField select label="Payment Method" name="payment_method" fullWidth margin="normal" value={invoice.payment_method} onChange={handleChange}>
+          <MenuItem value="Cash">Cash</MenuItem>
           <MenuItem value="Credit Card">Credit Card</MenuItem>
           <MenuItem value="PayPal">PayPal</MenuItem>
           <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
