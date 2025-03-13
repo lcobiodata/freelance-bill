@@ -21,20 +21,35 @@ const AddClient = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch(`${API_URL}/client`, { // Use API_URL constant
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(client)
-    });
-    
-    if (response.ok) {
-      navigate("/dashboard");
-      window.location.reload(); // Force refresh to fetch updated clients
+  
+    const token = localStorage.getItem("token");  // Retrieve token from local storage
+    if (!token) {
+      console.error("No token found, user must be logged in");
+      return;
+    }
+  
+    try {
+      const res = await fetch("http://127.0.0.1:5000/client", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // Include the JWT token
+        },
+        body: JSON.stringify(client), // Correctly passing the state
+
+      });
+  
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+  
+      const data = await res.json();
+      console.log("Client added:", data);
+    } catch (error) {
+      console.error("Failed to add client:", error);
     }
   };
+  
 
   return (
     <Container maxWidth="sm">

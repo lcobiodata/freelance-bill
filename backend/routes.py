@@ -289,6 +289,49 @@ def update_email():
 
     return jsonify({"message": "Email updated successfully. Please verify your new email."}), 200
 
+# -------------------- Client Routes --------------------
+@routes_bp.route("/clients", methods=["GET"])
+@jwt_required()
+def get_clients():
+    """ Fetch all clients for the authenticated user """
+    current_user = get_jwt_identity()
+    clients = Client.query.join(User).filter(User.username == current_user).all()
+
+    return jsonify([{
+        "id": client.id,
+        "name": client.name,
+        "business_name": client.business_name,
+        "email": client.email,
+        "phone": client.phone,
+        "address": client.address
+    } for client in clients]), 200
+
+@routes_bp.route("/client", methods=["POST"])
+@jwt_required()
+def create_client():
+    """ Create a new client """
+    data = request.get_json()
+    name = data.get("name")
+    business_name = data.get("business_name")
+    email = data.get("email")
+    phone = data.get("phone")
+    address = data.get("address")
+
+    current_user = get_jwt_identity()
+    user_id = User.query.filter_by(username=current_user).first().id
+
+    client = Client(
+        user_id=user_id,
+        name=name,
+        business_name=business_name,
+        email=email,
+        phone=phone,
+        address=address
+    )
+    db.session.add(client)
+    db.session.commit()
+    return jsonify({"message": "Client created successfully", "client_id": client.id}), 201
+
 # -------------------- Invoice Routes --------------------
 @routes_bp.route("/invoices", methods=["GET"])
 @jwt_required()
