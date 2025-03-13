@@ -15,8 +15,8 @@ import Dashboard from "./components/Dashboard";
 import EmailVerificationSuccess from "./components/EmailVerificationSuccess";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
-import CreateInvoiceForm from "./components/CreateInvoiceForm";
-import AddClientForm from "./components/AddClientForm";
+import CreateInvoice from "./components/CreateInvoice";
+import AddClient from "./components/AddClient";
 
 const Navbar = () => {
   const token = localStorage.getItem("token");
@@ -73,8 +73,8 @@ const App = () => {
           <Route path="/verify-success" element={<EmailVerificationSuccess />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/create-invoice" element={<CreateInvoiceForm />} />
-          <Route path="/add-client" element={<AddClientForm />} />
+          <Route path="/create-invoice" element={<CreateInvoice />} />
+          <Route path="/add-client" element={<AddClient />} />
         </Routes>
       </Container>
       <Footer />
