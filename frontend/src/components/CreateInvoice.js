@@ -55,15 +55,28 @@ const CreateInvoice = () => {
     setClients(data);
   };
 
-  // Handle form input changes
+  // Handle form input changes with validation
   const handleChange = (e) => {
-    setInvoice({ ...invoice, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" }); // Clear error when typing
+    const { name, value } = e.target;
+    const updatedInvoice = { ...invoice, [name]: value };
+    
+    setInvoice(updatedInvoice);
+    setErrors((prev) => ({ ...prev, [name]: "" })); // Clear error when typing
+  
+    // Validate Due Date: Must be later than Issue Date
+    if (updatedInvoice.issue_date && updatedInvoice.due_date) {
+      if (new Date(updatedInvoice.due_date) <= new Date(updatedInvoice.issue_date)) {
+        setErrors((prev) => ({ ...prev, due_date: "Due date must be later than the issue date." }));
+      } else {
+        setErrors((prev) => ({ ...prev, due_date: "" }));
+      }
+    }
   };
+  
 
   const handleItemChange = (e) => {
     setNewItem({ ...newItem, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   // Add item with validation
@@ -98,6 +111,9 @@ const CreateInvoice = () => {
     if (!invoice.client_id) newErrors.client_id = "Client selection is required.";
     if (!invoice.issue_date) newErrors.issue_date = "Issue date is required.";
     if (!invoice.due_date) newErrors.due_date = "Due date is required.";
+    if (invoice.due_date && invoice.issue_date && invoice.due_date < invoice.issue_date) {
+      newErrors.due_date = "Due date must be later than the issue date.";
+    }
     if (!invoice.payment_method) newErrors.payment_method = "Payment method is required.";
     if (invoice.items.length === 0) newErrors.items = "At least one item is required.";
 
