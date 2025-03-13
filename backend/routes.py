@@ -449,7 +449,7 @@ def delete_invoice(invoice_id):
 
 
 # -------------------- Payment Tracking --------------------
-@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["PUT"])
+@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])
 @jwt_required()
 def mark_invoice_paid(invoice_id):
     """ Mark an invoice as paid """
@@ -460,7 +460,7 @@ def mark_invoice_paid(invoice_id):
     db.session.commit()
     return jsonify({"message": "Invoice marked as paid"}), 200
 
-@routes_bp.route("/invoice/<int:invoice_id>/cancel", methods=["PUT"])
+@routes_bp.route("/invoice/<int:invoice_id>/cancel", methods=["POST"])
 @jwt_required()
 def cancel_invoice(invoice_id):
     """ Cancel an invoice """
