@@ -1,6 +1,20 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Enum as SQLAlchemyEnum
+from enum import Enum
 
 db = SQLAlchemy()
+
+class PaymentMethod(Enum):
+    CASH = 'Cash'
+    BANK_TRANSFER = 'Bank Transfer'
+    CREDIT_CARD = 'Credit Card'
+    PAYPAL = 'PayPal'
+
+class InvoiceStatus(Enum):
+    UNPAID = 'Unpaid'
+    PAID = 'Paid'
+    OVERDUE = 'Overdue'
+    CANCELLED = 'Cancelled'
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,8 +51,9 @@ class Invoice(db.Model):
     tax_amount = db.Column(db.Float)
     discount = db.Column(db.Float, default=0.0)
     total_amount = db.Column(db.Float)
-    status = db.Column(db.String(20))
-    payment_method = db.Column(db.String(50))
+    status = db.Column(SQLAlchemyEnum(InvoiceStatus), default=InvoiceStatus.UNPAID)
+    payment_method = db.Column(SQLAlchemyEnum(PaymentMethod))
+    payment_date = db.Column(db.Date)
 
     user = db.relationship('User', backref='invoices')
     client = db.relationship('Client', backref='invoices')

@@ -5,7 +5,7 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User, Client, Invoice, InvoiceItem
+from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus
 from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
@@ -349,7 +349,8 @@ def get_invoices():
         "tax_amount": invoice.tax_amount,
         "discount": invoice.discount,
         "total_amount": invoice.total_amount,
-        "status": invoice.status
+        "status": invoice.status.value,  # Convert enum to string
+        "payment_method": invoice.payment_method.value  # Convert enum to string
     } for invoice in invoices]), 200
 
 @routes_bp.route("/invoice", methods=["POST"])
@@ -368,6 +369,10 @@ def create_invoice():
     payment_method = data.get("payment_method", "Cash")
     items = data.get("items", [])
 
+    # Convert status and payment_method to Enum values
+    status_enum = InvoiceStatus[status.upper()]
+    payment_method_enum = PaymentMethod[payment_method.replace(" ", "_").upper()]
+
     current_user = get_jwt_identity()
     user_id = User.query.filter_by(username=current_user).first().id
     last_invoice = Invoice.query.filter_by(user_id=user_id).order_by(Invoice.id.desc()).first()
@@ -384,9 +389,8 @@ def create_invoice():
         tax_amount=tax_amount,
         discount=discount,
         total_amount=total_amount,
-        status=status,
-        payment_method=payment_method
-
+        status=status_enum,
+        payment_method=payment_method_enum
     )
     db.session.add(invoice)
     db.session.flush()  # Ensure invoice ID is generated before adding items
@@ -456,7 +460,8 @@ def mark_invoice_paid(invoice_id):
     invoice = Invoice.query.get(invoice_id)
     if not invoice:
         return jsonify({"message": "Invoice not found"}), 404
-    invoice.status = "Paid"
+    # invoice.status = "Paid"
+    invoice.status = InvoiceStatus.PAID
     db.session.commit()
     return jsonify({"message": "Invoice marked as paid"}), 200
 
@@ -467,6 +472,7 @@ def cancel_invoice(invoice_id):
     invoice = Invoice.query.get(invoice_id)
     if not invoice:
         return jsonify({"message": "Invoice not found"}), 404
-    invoice.status = "Cancelled"
+    # invoice.status = "Cancelled"
+    invoice.status = InvoiceStatus.CANCELLED
     db.session.commit()
     return jsonify({"message": "Invoice cancelled"}), 200
