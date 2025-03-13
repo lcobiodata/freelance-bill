@@ -332,6 +332,33 @@ def create_client():
     db.session.commit()
     return jsonify({"message": "Client created successfully", "client_id": client.id}), 201
 
+@routes_bp.route("/clients/<int:client_id>", methods=["PUT"])
+@jwt_required()
+def update_client(client_id):
+    """ Update an existing client """
+    data = request.get_json()
+    
+    # Get the logged-in user
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    # Find the client by ID and ensure it belongs to the user
+    client = Client.query.filter_by(id=client_id, user_id=user.id).first()
+
+    if not client:
+        return jsonify({"message": "Client not found"}), 404
+
+    # Update the fields if provided
+    client.name = data.get("name", client.name)
+    client.business_name = data.get("business_name", client.business_name)
+    client.email = data.get("email", client.email)
+    client.phone = data.get("phone", client.phone)
+    client.address = data.get("address", client.address)
+
+    db.session.commit()
+
+    return jsonify({"message": "Client updated successfully"}), 200
+
 # -------------------- Invoice Routes --------------------
 @routes_bp.route("/invoices", methods=["GET"])
 @jwt_required()
