@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL; // Define API_URL constant
 
-const CreateInvoiceForm = () => {
+const CreateInvoice = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const [clients, setClients] = useState([]);
@@ -132,4 +132,4 @@ const CreateInvoiceForm = () => {
   );
 };
 
-export default CreateInvoiceForm;
+export default CreateInvoice;
