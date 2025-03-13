@@ -472,7 +472,15 @@ def cancel_invoice(invoice_id):
     invoice = Invoice.query.get(invoice_id)
     if not invoice:
         return jsonify({"message": "Invoice not found"}), 404
-    # invoice.status = "Cancelled"
-    invoice.status = InvoiceStatus.CANCELLED
-    db.session.commit()
-    return jsonify({"message": "Invoice cancelled"}), 200
+
+    # Check if the invoice is already paid
+    if invoice.status == InvoiceStatus.PAID:
+        return jsonify({"message": "Cannot cancel a paid invoice"}), 400
+
+    # Allow cancellation only if the invoice is unpaid or overdue
+    if invoice.status in [InvoiceStatus.UNPAID, InvoiceStatus.OVERDUE]:
+        invoice.status = InvoiceStatus.CANCELLED
+        db.session.commit()
+        return jsonify({"message": "Invoice cancelled"}), 200
+
+    return jsonify({"message": "Invoice cannot be cancelled"}), 400
