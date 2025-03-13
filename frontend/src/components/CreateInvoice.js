@@ -1,5 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Container, Paper, Typography, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, CircularProgress, Alert } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Container,
+  Paper,
+  Typography,
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Box,
+  CircularProgress,
+  Alert
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL; 
@@ -7,6 +23,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 const CreateInvoice = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
   const [clients, setClients] = useState([]);
   const [invoice, setInvoice] = useState({
     client_id: "",
@@ -20,6 +37,7 @@ const CreateInvoice = () => {
     payment_method: "",
     items: []
   });
+
   const [newItem, setNewItem] = useState({ description: "", quantity: 1, rate: 0, amount: 0 });
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -51,13 +69,16 @@ const CreateInvoice = () => {
     const tax = parseFloat(invoice.tax_amount);
     const discount = parseFloat(invoice.discount);
     const newTotal = newSubtotal + tax - discount;
+
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
+
+    // ✅ Reset the item input fields
     setNewItem({ description: "", quantity: 1, rate: 0, amount: 0 });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsRedirecting(true); // 🔄 Show loading spinner
+    setIsRedirecting(true);
 
     try {
       const response = await fetch(`${API_URL}/invoice`, {
@@ -74,16 +95,14 @@ const CreateInvoice = () => {
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       setMessage(<Alert severity="error">Failed to create invoice. Please try again.</Alert>);
-      setIsRedirecting(false); // ❌ Stop loading spinner if error occurs
+      setIsRedirecting(false);
     }
   };
 
   return (
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 5 }}>
-        <Typography variant="h5" gutterBottom>
-          Create Invoice
-        </Typography>
+        <Typography variant="h5" gutterBottom>Create Invoice</Typography>
 
         {/* Show success or error message */}
         {message && <Box sx={{ my: 2 }}>{message}</Box>}
@@ -119,9 +138,8 @@ const CreateInvoice = () => {
               <MenuItem value="PayPal">PayPal</MenuItem>
               <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
             </TextField>
-            <Typography variant="h6" sx={{ mt: 3 }}>
-              Invoice Items
-            </Typography>
+            
+            <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
@@ -144,18 +162,16 @@ const CreateInvoice = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <TextField label="Description" name="description" fullWidth margin="normal" onChange={handleItemChange} />
-            <TextField label="Quantity" type="number" name="quantity" fullWidth margin="normal" onChange={handleItemChange} />
-            <TextField label="Rate" type="number" name="rate" fullWidth margin="normal" onChange={handleItemChange} />
-            
-            {/* Add Item Button - Left Aligned */}
-            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
-              <Button variant="contained" color="primary" onClick={addItem}>
-                Add Item
-              </Button>
-            </Box>
 
-            {/* Submit Invoice Button - Centered Below */}
+            {/* Item Input Fields */}
+            <TextField label="Description" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} />
+            <TextField label="Quantity" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} />
+            <TextField label="Rate" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} />
+
+            {/* Buttons */}
+            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+              <Button variant="contained" color="primary" onClick={addItem}>Add Item</Button>
+            </Box>
             <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
               <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={isRedirecting}>
                 {isRedirecting ? <CircularProgress size={24} /> : "Submit Invoice"}
