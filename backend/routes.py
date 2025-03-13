@@ -91,7 +91,7 @@ def register():
     db.session.commit()
 
     # Send a verification email
-    send_verification_email(username, verification_token)
+    send_verification_email(email, verification_token)
 
     return jsonify({"message": "User registered. Please check your email to verify."}), 201
 
