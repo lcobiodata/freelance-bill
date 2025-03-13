@@ -38,7 +38,7 @@ const CreateInvoice = () => {
     items: []
   });
 
-  const [newItem, setNewItem] = useState({ description: "", quantity: 1, rate: 0, amount: 0 });
+  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", amount: "" });
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -72,7 +72,7 @@ const CreateInvoice = () => {
   
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
   
-    // ✅ Reset item fields to be empty instead of 1 and 0
+    // Reset item fields to be completely empty instead of 1 or 0
     setNewItem({ description: "", quantity: "", rate: "", amount: "" });
   };
   
