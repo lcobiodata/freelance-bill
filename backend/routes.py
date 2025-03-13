@@ -338,16 +338,19 @@ def create_client():
 def get_invoices():
     """ Fetch all invoices for the authenticated user """
     current_user = get_jwt_identity()
-    invoices = Invoice.query.join(Client).filter(Client.email == current_user).all()
+    invoices = Invoice.query.join(User).filter(User.username == current_user).all()
 
     return jsonify([{
-        "invoice_number": inv.invoice_number or "N/A",
-        "client": inv.client.name if inv.client else "Unknown",
-        "issue_date": inv.issue_date.strftime("%Y-%m-%d") if inv.issue_date else "N/A",
-        "due_date": inv.due_date.strftime("%Y-%m-%d") if inv.due_date else "N/A",
-        "total_amount": inv.total_amount or 0.0,
-        "status": inv.status or "Pending",
-    } for inv in invoices]), 200
+        "invoice_number": invoice.invoice_number,
+        "client": invoice.client.name if invoice.client else "Unknown",
+        "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
+        "due_date": invoice.due_date.strftime("%Y-%m-%d"),
+        "subtotal": invoice.subtotal,
+        "tax_amount": invoice.tax_amount,
+        "discount": invoice.discount,
+        "total_amount": invoice.total_amount,
+        "status": invoice.status
+    } for invoice in invoices]), 200
 
 @routes_bp.route("/invoice", methods=["POST"])
 @jwt_required()
