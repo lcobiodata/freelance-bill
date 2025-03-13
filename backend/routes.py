@@ -370,8 +370,8 @@ def create_invoice():
 
     current_user = get_jwt_identity()
     user_id = User.query.filter_by(username=current_user).first().id
-    last_invoice = Invoice.query.filter_by(user_id=user_id, client_id=client_id).order_by(Invoice.id.desc()).first()
-    last_invoice_number = last_invoice.invoice_number if last_invoice else 0
+    last_invoice = Invoice.query.filter_by(user_id=user_id).order_by(Invoice.id.desc()).first()
+    last_invoice_number = int(last_invoice.invoice_number) if last_invoice else 0
     invoice_number = last_invoice_number + 1
 
     invoice = Invoice(
