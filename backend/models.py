@@ -8,10 +8,6 @@ class User(db.Model):
     password = db.Column(db.String(256), nullable=True)  # OAuth users have no local password
     is_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(100), unique=True, nullable=True)
-
-class Freelancer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(100))
     business_name = db.Column(db.String(100))
     email = db.Column(db.String(100))
@@ -21,19 +17,19 @@ class Freelancer(db.Model):
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Associate with User
     name = db.Column(db.String(100))
     business_name = db.Column(db.String(100))
     email = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200))
 
-    freelancer = db.relationship('Freelancer', backref='clients')
+    user = db.relationship('User', backref='clients')
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     invoice_number = db.Column(db.String(50), unique=True)
-    freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
     issue_date = db.Column(db.Date)
     due_date = db.Column(db.Date)
@@ -44,7 +40,7 @@ class Invoice(db.Model):
     status = db.Column(db.String(20))
     payment_method = db.Column(db.String(50))
 
-    freelancer = db.relationship('Freelancer', backref='invoices')
+    user = db.relationship('User', backref='invoices')
     client = db.relationship('Client', backref='invoices')
 
 class InvoiceItem(db.Model):
