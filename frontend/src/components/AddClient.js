@@ -26,6 +26,7 @@ const AddClient = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false); // 🔄 Added redirect spinner state
   const [message, setMessage] = useState(null);
 
   const handleChange = (e) => {
@@ -41,7 +42,7 @@ const AddClient = () => {
       return;
     }
 
-    setIsSubmitting(true); // Show loader
+    setIsSubmitting(true); // 🔄 Show initial loading spinner
 
     try {
       const res = await fetch(`${API_URL}/client`, {
@@ -60,9 +61,9 @@ const AddClient = () => {
       const data = await res.json();
       console.log("Client added:", data);
 
-      setMessage(
-        <Alert severity="success">Client added successfully! Redirecting...</Alert>
-      );
+      setMessage(<Alert severity="success">Client added successfully! Redirecting...</Alert>);
+      setIsSubmitting(false);
+      setIsRedirecting(true); // 🔄 Show loading spinner for redirect
 
       // Redirect to dashboard after 2 seconds
       setTimeout(() => navigate("/dashboard"), 2000);
@@ -70,9 +71,8 @@ const AddClient = () => {
     } catch (error) {
       console.error("Failed to add client:", error);
       setMessage(<Alert severity="error">Failed to add client. Please try again.</Alert>);
+      setIsSubmitting(false); // ❌ Stop loader if request fails
     }
-
-    setIsSubmitting(false); // Stop loader
   };
 
   return (
@@ -84,24 +84,31 @@ const AddClient = () => {
 
         {message && <Box sx={{ my: 2 }}>{message}</Box>}
 
-        <form onSubmit={handleSubmit}>
-          <TextField label="Name" name="name" fullWidth margin="normal" onChange={handleChange} required />
-          <TextField label="Business Name" name="business_name" fullWidth margin="normal" onChange={handleChange} />
-          <TextField label="Email" name="email" type="email" fullWidth margin="normal" onChange={handleChange} required />
-          <TextField label="Phone" name="phone" fullWidth margin="normal" onChange={handleChange} />
-          <TextField label="Address" name="address" fullWidth margin="normal" onChange={handleChange} />
-          
-          <Button 
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 3 }}
-            disabled={isSubmitting} // Disable while submitting
-          >
-            {isSubmitting ? <CircularProgress size={24} /> : "Add Client"}
-          </Button>
-        </form>
+        {/* Show loading spinner while redirecting */}
+        {isRedirecting ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <CircularProgress size={40} />
+          </Box>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <TextField label="Name" name="name" fullWidth margin="normal" onChange={handleChange} required />
+            <TextField label="Business Name" name="business_name" fullWidth margin="normal" onChange={handleChange} />
+            <TextField label="Email" name="email" type="email" fullWidth margin="normal" onChange={handleChange} required />
+            <TextField label="Phone" name="phone" fullWidth margin="normal" onChange={handleChange} />
+            <TextField label="Address" name="address" fullWidth margin="normal" onChange={handleChange} />
+            
+            <Button 
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mt: 3 }}
+              disabled={isSubmitting} // 🔄 Disable while submitting
+            >
+              {isSubmitting ? <CircularProgress size={24} /> : "Add Client"} {/* 🔄 Show spinner while submitting */}
+            </Button>
+          </form>
+        )}
       </Paper>
     </Container>
   );
