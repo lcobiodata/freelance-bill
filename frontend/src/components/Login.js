@@ -17,7 +17,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 const Login = () => {
-  const [email, setEmail] = useState("");       // Renamed to "email" for clarity
+  const [username, setUser] = useState("");  // Renamed to setUser for consistency
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ const Login = () => {
 
     try {
       const res = await axios.post(`${API_URL}/login`, {
-        username: email, // If your server expects "username", pass email as the value
+        username: username, // Renamed to username for consistency
         password,
       });
       localStorage.setItem("token", res.data.token);
@@ -37,9 +37,7 @@ const Login = () => {
       );
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
-      // Example: If your Flask code returns 403 for unverified email
       if (err.response?.status === 403) {
-        // Or check err.response.data.message === 'Email not verified...'
         setMessage(
           <Alert severity="warning">
             Your email is not verified. Please check your inbox.
@@ -59,17 +57,12 @@ const Login = () => {
   // Google OAuth success callback
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      // 1. The user just logged in with Google: get ID token from Google
       const idToken = credentialResponse.credential;
-
-      // 2. POST the ID token to your /login/google endpoint
       const res = await axios.post(`${API_URL}/login/google`, {
         token: idToken,
       });
 
-      // 3. Store your own JWT
       localStorage.setItem("token", res.data.token);
-
       setMessage(
         <Alert severity="success">Google login successful! Redirecting...</Alert>
       );
@@ -90,16 +83,16 @@ const Login = () => {
           </Typography>
           {message && <Box sx={{ my: 2 }}>{message}</Box>}
 
-          {/* Traditional email/password login */}
+          {/* Traditional username/password login */}
           <form onSubmit={handleLogin}>
             <TextField
               fullWidth
-              label="Email"
-              type="email"           // Helps with basic HTML5 validation
+              label="User ID"
+              type="text"
               variant="outlined"
               margin="normal"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUser(e.target.value)}
               required
             />
             <TextField
@@ -127,14 +120,12 @@ const Login = () => {
             <Link to="/forgot-password">Forgot Password?</Link>
           </Typography>
 
-          {/* Divider with "or" text */}
           <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
             <Divider sx={{ flexGrow: 1 }} />
             <Typography variant="body1" sx={{ mx: 2 }}>or</Typography>
             <Divider sx={{ flexGrow: 1 }} />
           </Box>
 
-          {/* Google Login Button */}
           <Box sx={{ my: 2 }}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}

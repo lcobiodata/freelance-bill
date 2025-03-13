@@ -17,6 +17,12 @@ const API_URL = process.env.REACT_APP_API_URL;
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
   const [message, setMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -25,7 +31,7 @@ const Register = () => {
     e.preventDefault();
 
     // Client-side email format check
-    if (!validator.isEmail(username)) {
+    if (!validator.isEmail(email)) {
       setMessage(
         <Alert severity="error">
           Invalid email format.
@@ -40,6 +46,12 @@ const Register = () => {
       const res = await axios.post(`${API_URL}/register`, {
         username,
         password,
+        name,
+        business_name: businessName,
+        email,
+        phone,
+        address,
+        tax_number: taxNumber,
       });
 
       // Show a message that an email was sent and keep the button disabled
@@ -49,11 +61,7 @@ const Register = () => {
             "Registration successful! A verification email has been sent. Please check your inbox."}
         </Alert>
       );
-      
-      // Optionally, you could reset form fields here if needed:
-      // setUsername("");
-      // setPassword("");
-      
+
     } catch (err) {
       if (err.response?.data?.message === "User already exists") {
         setMessage(
@@ -86,7 +94,7 @@ const Register = () => {
         <form onSubmit={handleRegister}>
           <TextField
             fullWidth
-            label="Email"
+            label="User ID"
             type="text"
             variant="outlined"
             margin="normal"
@@ -103,6 +111,62 @@ const Register = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+          />
+          <TextField
+            fullWidth
+            label="Name"
+            type="text"
+            variant="outlined"
+            margin="normal"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <TextField
+            fullWidth
+            label="Business Name"
+            type="text"
+            variant="outlined"
+            margin="normal"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+          />
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            variant="outlined"
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <TextField
+            fullWidth
+            label="Phone"
+            type="text"
+            variant="outlined"
+            margin="normal"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <TextField
+            fullWidth
+            label="Address"
+            type="text"
+            variant="outlined"
+            margin="normal"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+          <TextField
+            fullWidth
+            label="Tax Number"
+            type="text"
+            variant="outlined"
+            margin="normal"
+            value={taxNumber}
+            onChange={(e) => setTaxNumber(e.target.value)}
           />
           <Button
             type="submit"
