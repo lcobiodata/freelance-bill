@@ -17,7 +17,9 @@ const API_URL = process.env.REACT_APP_API_URL;
 const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // Confirm Password Field
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(""); // Real-time password validation
+  const [confirmPasswordError, setConfirmPasswordError] = useState(""); // Real-time match check
   const [name, setName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
@@ -39,6 +41,32 @@ const Register = () => {
     });
   };
 
+  // ✅ Validate password strength in real-time
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+
+    if (!isStrongPassword(newPassword)) {
+      setPasswordError(
+        "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character."
+      );
+    } else {
+      setPasswordError(""); // ✅ Password is strong
+    }
+  };
+
+  // ✅ Validate if passwords match in real-time
+  const handleConfirmPasswordChange = (e) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+
+    if (newConfirmPassword !== password) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else {
+      setConfirmPasswordError(""); // ✅ Passwords match
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -50,17 +78,13 @@ const Register = () => {
 
     // ✅ Check for password strength
     if (!isStrongPassword(password)) {
-      setMessage(
-        <Alert severity="error">
-          Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.
-        </Alert>
-      );
+      setMessage(<Alert severity="error">Invalid password.</Alert>);
       return;
     }
 
     // ✅ Check if passwords match
     if (password !== confirmPassword) {
-      setMessage(<Alert severity="error">Passwords do not match.</Alert>);
+      setMessage(<Alert severity="error">Invalid password.</Alert>);
       return;
     }
 
@@ -127,7 +151,9 @@ const Register = () => {
             variant="outlined"
             margin="normal"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
+            error={!!passwordError}
+            helperText={passwordError}
             required
           />
           <TextField
@@ -137,7 +163,9 @@ const Register = () => {
             variant="outlined"
             margin="normal"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={handleConfirmPasswordChange}
+            error={!!confirmPasswordError}
+            helperText={confirmPasswordError}
             required
           />
           <TextField
