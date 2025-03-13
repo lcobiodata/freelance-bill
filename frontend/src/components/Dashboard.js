@@ -65,9 +65,10 @@ const Dashboard = () => {
         </Typography>
         {token ? (
           <DashboardTabs tabIndex={tabIndex} setTabIndex={setTabIndex}>
-            <ClientsTable clients={clients} loading={loadingClients} />
             <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} />
+            <ClientsTable clients={clients} loading={loadingClients} />
           </DashboardTabs>
+        
         ) : (
           <Typography variant="body1" color="error">
             You are not logged in. Please <a href="/login">Login</a>.
