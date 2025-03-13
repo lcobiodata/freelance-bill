@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Container, Paper, Typography, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { TextField, Button, Container, Paper, Typography, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL; // Define API_URL constant
@@ -122,12 +122,18 @@ const CreateInvoice = () => {
         <TextField label="Description" name="description" fullWidth margin="normal" onChange={handleItemChange} />
         <TextField label="Quantity" type="number" name="quantity" fullWidth margin="normal" onChange={handleItemChange} />
         <TextField label="Rate" type="number" name="rate" fullWidth margin="normal" onChange={handleItemChange} />
-        <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={addItem}>
-          Add Item
-        </Button>
-        <Button variant="contained" color="secondary" sx={{ mt: 3, ml: 2 }} onClick={handleSubmit}>
-          Submit Invoice
-        </Button>
+        {/* Add Item Button - Left Aligned */}
+        <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+          <Button variant="contained" color="primary" onClick={addItem}>
+            Add Item
+          </Button>
+        </Box>
+        {/* Submit Invoice Button - Centered Below */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <Button variant="contained" color="secondary" onClick={handleSubmit}>
+            Submit Invoice
+          </Button>
+        </Box>
       </Paper>
     </Container>
   );
