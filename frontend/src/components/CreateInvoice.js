@@ -63,18 +63,19 @@ const CreateInvoice = () => {
   };
 
   const addItem = () => {
-    const itemAmount = parseFloat(newItem.quantity) * parseFloat(newItem.rate);
+    const itemAmount = parseFloat(newItem.quantity || 0) * parseFloat(newItem.rate || 0);
     const updatedItems = [...invoice.items, { ...newItem, amount: itemAmount }];
     const newSubtotal = updatedItems.reduce((sum, item) => sum + item.amount, 0);
-    const tax = parseFloat(invoice.tax_amount);
-    const discount = parseFloat(invoice.discount);
+    const tax = parseFloat(invoice.tax_amount) || 0;
+    const discount = parseFloat(invoice.discount) || 0;
     const newTotal = newSubtotal + tax - discount;
-
+  
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
-
-    // ✅ Reset the item input fields
-    setNewItem({ description: "", quantity: 1, rate: 0, amount: 0 });
+  
+    // ✅ Reset item fields to be empty instead of 1 and 0
+    setNewItem({ description: "", quantity: "", rate: "", amount: "" });
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
