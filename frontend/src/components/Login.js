@@ -10,6 +10,7 @@ import {
   Box,
   Alert,
   Divider,
+  CircularProgress
 } from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
@@ -17,9 +18,10 @@ const API_URL = process.env.REACT_APP_API_URL;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 const Login = () => {
-  const [username, setUser] = useState("");  // Renamed to setUser for consistency
+  const [username, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const [isRedirecting, setIsRedirecting] = useState(false); // 🔄 Added redirect spinner state
   const navigate = useNavigate();
 
   // Normal password-based login
@@ -28,15 +30,19 @@ const Login = () => {
 
     try {
       const res = await axios.post(`${API_URL}/login`, {
-        username: username, // Renamed to username for consistency
+        username,
         password,
       });
+
       localStorage.setItem("token", res.data.token);
-      setMessage(
-        <Alert severity="success">Login successful! Redirecting...</Alert>
-      );
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setMessage(<Alert severity="success">Login successful! Redirecting...</Alert>);
+      
+      setIsRedirecting(true); // 🔄 Show loading spinner
+
+      setTimeout(() => navigate("/dashboard"), 2000); // ⏳ Redirect after 2 seconds
     } catch (err) {
+      setIsRedirecting(false); // ❌ Stop spinner on error
+
       if (err.response?.status === 403) {
         setMessage(
           <Alert severity="warning">
@@ -63,14 +69,15 @@ const Login = () => {
       });
 
       localStorage.setItem("token", res.data.token);
-      setMessage(
-        <Alert severity="success">Google login successful! Redirecting...</Alert>
-      );
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
+
+      setIsRedirecting(true); // 🔄 Show loading spinner
+
+      setTimeout(() => navigate("/dashboard"), 2000); // ⏳ Redirect after 2 seconds
     } catch (error) {
-      setMessage(
-        <Alert severity="error">Google login failed. Please try again.</Alert>
-      );
+      setIsRedirecting(false); // ❌ Stop spinner on error
+
+      setMessage(<Alert severity="error">Google login failed. Please try again.</Alert>);
     }
   };
 
@@ -81,68 +88,77 @@ const Login = () => {
           <Typography variant="h4" gutterBottom>
             Login to Your Account
           </Typography>
+
           {message && <Box sx={{ my: 2 }}>{message}</Box>}
 
-          {/* Traditional username/password login */}
-          <form onSubmit={handleLogin}>
-            <TextField
-              fullWidth
-              label="User ID"
-              type="text"
-              variant="outlined"
-              margin="normal"
-              value={username}
-              onChange={(e) => setUser(e.target.value)}
-              required
-            />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              variant="outlined"
-              margin="normal"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              sx={{ mt: 2 }}
-            >
-              Login
-            </Button>
-          </form>
+          {/* Show loading spinner while redirecting */}
+          {isRedirecting ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <CircularProgress size={40} />
+            </Box>
+          ) : (
+            <>
+              {/* Traditional username/password login */}
+              <form onSubmit={handleLogin}>
+                <TextField
+                  fullWidth
+                  label="User ID"
+                  type="text"
+                  variant="outlined"
+                  margin="normal"
+                  value={username}
+                  onChange={(e) => setUser(e.target.value)}
+                  required
+                />
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type="password"
+                  variant="outlined"
+                  margin="normal"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  Login
+                </Button>
+              </form>
 
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            <Link to="/forgot-password">Forgot Password?</Link>
-          </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <Link to="/forgot-password">Forgot Password?</Link>
+              </Typography>
 
-          <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
-            <Divider sx={{ flexGrow: 1 }} />
-            <Typography variant="body1" sx={{ mx: 2 }}>or</Typography>
-            <Divider sx={{ flexGrow: 1 }} />
-          </Box>
+              <Box sx={{ my: 2, display: 'flex', alignItems: 'center' }}>
+                <Divider sx={{ flexGrow: 1 }} />
+                <Typography variant="body1" sx={{ mx: 2 }}>or</Typography>
+                <Divider sx={{ flexGrow: 1 }} />
+              </Box>
 
-          <Box sx={{ my: 2 }}>
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() =>
-                setMessage(
-                  <Alert severity="error">Google login failed.</Alert>
-                )
-              }
-            />
-          </Box>
+              {/* Google Login */}
+              <Box sx={{ my: 2 }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() =>
+                    setMessage(<Alert severity="error">Google login failed.</Alert>)
+                  }
+                />
+              </Box>
 
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Don't have an account? <Link to="/register">Register here</Link>.
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            <Link to="/">Back to Home</Link>
-          </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                Don't have an account? <Link to="/register">Register here</Link>.
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <Link to="/">Back to Home</Link>
+              </Typography>
+            </>
+          )}
         </Paper>
       </Container>
     </GoogleOAuthProvider>
