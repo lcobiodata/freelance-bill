@@ -365,10 +365,18 @@ def create_invoice():
     discount = data.get("discount", 0.0)
     total_amount = data.get("total_amount")
     status = data.get("status", "Unpaid")
+    payment_method = data.get("payment_method", "Cash")
     items = data.get("items", [])
 
+    current_user = get_jwt_identity()
+    user_id = User.query.filter_by(username=current_user).first().id
+    last_invoice = Invoice.query.filter_by(user_id=user_id, client_id=client_id).order_by(Invoice.id.desc()).first()
+    last_invoice_number = last_invoice.invoice_number if last_invoice else 0
+    invoice_number = last_invoice_number + 1
+
     invoice = Invoice(
-        invoice_number=secrets.token_hex(5),
+        invoice_number=invoice_number,
+        user_id=user_id,
         client_id=client_id,
         issue_date=issue_date,
         due_date=due_date,
@@ -376,7 +384,9 @@ def create_invoice():
         tax_amount=tax_amount,
         discount=discount,
         total_amount=total_amount,
-        status=status
+        status=status,
+        payment_method=payment_method
+
     )
     db.session.add(invoice)
     db.session.flush()  # Ensure invoice ID is generated before adding items
