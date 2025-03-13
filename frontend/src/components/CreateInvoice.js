@@ -14,11 +14,13 @@ import {
   TableRow,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton
 } from "@mui/material";
+import { Edit, Delete } from "@mui/icons-material"; // Import icons
 import { useNavigate } from "react-router-dom";
 
-const API_URL = process.env.REACT_APP_API_URL; 
+const API_URL = process.env.REACT_APP_API_URL;
 
 const CreateInvoice = () => {
   const navigate = useNavigate();
@@ -39,6 +41,7 @@ const CreateInvoice = () => {
   });
 
   const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", amount: "" });
+  const [editIndex, setEditIndex] = useState(null); // Track editing index
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
   const [errors, setErrors] = useState({}); // Track missing fields
@@ -59,7 +62,7 @@ const CreateInvoice = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     const updatedInvoice = { ...invoice, [name]: value };
-    
+
     setInvoice(updatedInvoice);
     setErrors((prev) => ({ ...prev, [name]: "" })); // Clear error when typing
   
@@ -72,15 +75,14 @@ const CreateInvoice = () => {
       }
     }
   };
-  
 
   const handleItemChange = (e) => {
     setNewItem({ ...newItem, [e.target.name]: e.target.value });
     setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
-  // Add item with validation
-  const addItem = () => {
+  // ✅ **Add or Edit Item**
+  const saveItem = () => {
     const { description, quantity, rate } = newItem;
     const newErrors = {};
 
@@ -94,7 +96,17 @@ const CreateInvoice = () => {
     }
 
     const itemAmount = parseFloat(quantity) * parseFloat(rate);
-    const updatedItems = [...invoice.items, { ...newItem, amount: itemAmount }];
+    const updatedItems = [...invoice.items];
+
+    if (editIndex !== null) {
+      // ✅ **Editing an existing item**
+      updatedItems[editIndex] = { ...newItem, amount: itemAmount };
+      setEditIndex(null); // Reset edit mode
+    } else {
+      // ✅ **Adding a new item**
+      updatedItems.push({ ...newItem, amount: itemAmount });
+    }
+
     const newSubtotal = updatedItems.reduce((sum, item) => sum + item.amount, 0);
     const tax = parseFloat(invoice.tax_amount) || 0;
     const discount = parseFloat(invoice.discount) || 0;
@@ -103,6 +115,23 @@ const CreateInvoice = () => {
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
 
     setNewItem({ description: "", quantity: "", rate: "", amount: "" });
+  };
+
+  // ✅ **Edit Item**
+  const editItem = (index) => {
+    setNewItem(invoice.items[index]);
+    setEditIndex(index);
+  };
+
+  // ✅ **Delete Item**
+  const deleteItem = (index) => {
+    const updatedItems = invoice.items.filter((_, i) => i !== index);
+    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.amount, 0);
+    const tax = parseFloat(invoice.tax_amount) || 0;
+    const discount = parseFloat(invoice.discount) || 0;
+    const newTotal = newSubtotal + tax - discount;
+
+    setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
   };
 
   // Validate before submission
@@ -138,7 +167,6 @@ const CreateInvoice = () => {
       if (!response.ok) throw new Error("Failed to create invoice.");
 
       setMessage(<Alert severity="success">Invoice created successfully! Redirecting...</Alert>);
-
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       setMessage(<Alert severity="error">Failed to create invoice. Please try again.</Alert>);
@@ -210,6 +238,7 @@ const CreateInvoice = () => {
                     <TableCell>Quantity</TableCell>
                     <TableCell>Rate</TableCell>
                     <TableCell>Amount</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -219,6 +248,14 @@ const CreateInvoice = () => {
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{item.rate}</TableCell>
                       <TableCell>{item.amount}</TableCell>
+                      <TableCell>
+                        <IconButton onClick={() => editItem(index)} color="primary">
+                          <Edit />
+                        </IconButton>
+                        <IconButton onClick={() => deleteItem(index)} color="error">
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -230,7 +267,9 @@ const CreateInvoice = () => {
             <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
 
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
-              <Button variant="contained" color="primary" onClick={addItem}>Add Item</Button>
+              <Button variant="contained" color="primary" onClick={saveItem}>
+                {editIndex !== null ? "Update Item" : "Add Item"}
+              </Button>
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
               <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={isRedirecting}>Submit Invoice</Button>
