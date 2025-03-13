@@ -15,7 +15,9 @@ import {
   Box,
   CircularProgress,
   Alert,
-  IconButton
+  IconButton,
+  Checkbox,
+  FormControlLabel
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material"; // Import icons
 import { useNavigate } from "react-router-dom";
@@ -45,6 +47,7 @@ const CreateInvoice = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
   const [errors, setErrors] = useState({}); // Track missing fields
+  const [isConfirmed, setIsConfirmed] = useState(false); // ✅ Checkbox state
 
   useEffect(() => {
     fetchClients();
@@ -266,14 +269,24 @@ const CreateInvoice = () => {
             <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
             <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
 
-            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
-              <Button variant="contained" color="primary" onClick={saveItem}>
-                {editIndex !== null ? "Update Item" : "Add Item"}
-              </Button>
-            </Box>
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-              <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={isRedirecting}>Submit Invoice</Button>
-            </Box>
+        <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+          <Button variant="contained" color="primary" onClick={saveItem}>
+            {editIndex !== null ? "Update Item" : "Add Item"}
+          </Button>
+        </Box>
+
+        {/* ✅ Checkbox for confirmation */}
+        <FormControlLabel
+          control={<Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} />}
+          label="I hereby confirm that all the information provided is correct and true."
+          sx={{ mt: 3 }}
+        />
+
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={!isConfirmed || isRedirecting}>
+            Submit Invoice
+          </Button>
+        </Box>
           </>
         )}
       </Paper>
