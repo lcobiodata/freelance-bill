@@ -360,34 +360,67 @@ def update_client(client_id):
     return jsonify({"message": "Client updated successfully"}), 200
 
 # -------------------- Invoice Routes --------------------
+from sqlalchemy.orm import joinedload
+from sqlalchemy import func
+
 @routes_bp.route("/invoices", methods=["GET"])
 @jwt_required()
 def get_invoices():
-    """ Fetch all invoices for the authenticated user """
+    """ Fetch all invoices for the authenticated user with optimized joins """
     current_user = get_jwt_identity()
-    invoices = Invoice.query.join(User).filter(User.username == current_user).all()
 
-    # Check due dates and update status if overdue
+    # Get all invoices with joined Clients and aggregated totals
+    invoices = (
+        db.session.query(
+            Invoice.id,
+            Invoice.invoice_number,
+            Client.name.label("client_name"),
+            Invoice.issue_date,
+            Invoice.due_date,
+            Invoice.currency,
+            Invoice.tax,
+            Invoice.status,
+            Invoice.payment_method,
+            Invoice.payment_date,
+            func.sum(InvoiceItem.quantity * InvoiceItem.rate).label("subtotal"),
+            func.sum(InvoiceItem.quantity * InvoiceItem.rate * (InvoiceItem.discount / 100)).label("total_discount"),
+        )
+        .join(User, User.id == Invoice.user_id)
+        .join(Client, Client.id == Invoice.client_id)
+        .outerjoin(InvoiceItem, InvoiceItem.invoice_id == Invoice.id)  # Ensure invoices with no items are included
+        .filter(User.username == current_user)
+        .group_by(Invoice.id, Client.name)  # Aggregate by invoice
+        .all()
+    )
+
     today = datetime.today().date()
-    for invoice in invoices:
-        if invoice.due_date < today and invoice.status == InvoiceStatus.UNPAID:
-            invoice.status = InvoiceStatus.OVERDUE
-    db.session.commit()
+    invoices_data = []
+    for inv in invoices:
+        # Determine if the invoice is overdue
+        status = InvoiceStatus.OVERDUE if (inv.due_date < today and inv.status == InvoiceStatus.UNPAID) else inv.status
 
-    # Query again to ensure changes are reflected
-    invoices = Invoice.query.join(User).filter(User.username == current_user).all()
+        discounted_price = (inv.subtotal or 0) - (inv.total_discount or 0)
+        tax_amount = (inv.tax or 0) * discounted_price / 100
+        total_amount = discounted_price + tax_amount
 
-    return jsonify([{
-        "invoice_number": invoice.invoice_number,
-        "client": invoice.client.name if invoice.client else "Unknown",
-        "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
-        "due_date": invoice.due_date.strftime("%Y-%m-%d"),
-        "currency": invoice.currency.name,
-        "tax": invoice.tax,
-        "status": invoice.status.value,  # Convert enum to string
-        "payment_method": invoice.payment_method.value,  # Convert enum to string
-        "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None
-    } for invoice in invoices]), 200
+        invoices_data.append({
+            "invoice_number": inv.invoice_number,
+            "client": inv.client_name if inv.client_name else "Unknown",
+            "issue_date": inv.issue_date.strftime("%Y-%m-%d"),
+            "due_date": inv.due_date.strftime("%Y-%m-%d"),
+            "currency": inv.currency.name,
+            "tax": inv.tax,
+            "status": status.value,  # Convert enum to string
+            "payment_method": inv.payment_method.value,
+            "payment_date": inv.payment_date.strftime("%Y-%m-%d") if inv.payment_date else None,
+            "subtotal": round(inv.subtotal or 0, 2),
+            "total_discount": round(inv.total_discount or 0, 2),
+            "tax_amount": round(tax_amount, 2),
+            "total_amount": round(total_amount, 2),
+        })
+
+    return jsonify(invoices_data), 200
+
 
 @routes_bp.route("/invoice", methods=["POST"])
 @jwt_required()

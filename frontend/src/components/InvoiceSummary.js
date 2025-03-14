@@ -2,9 +2,12 @@ import React from "react";
 import { Box, Typography, Button, Card, CardContent, Divider, Grid } from "@mui/material";
 
 const InvoiceSummary = ({ invoice, isConfirmed, handleSubmit }) => {
-  // Ensure all numeric fields are properly initialized and converted to numbers
-  const subtotal = Number(invoice.subtotal) || 0;
-  const totalDiscount = Number(invoice.total_discount) || 0;
+  // Ensure items exist and are properly iterated over
+  const items = invoice.items || [];
+
+  // Calculate subtotal, total discount, and tax dynamically
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+  const totalDiscount = items.reduce((sum, item) => sum + (item.quantity * item.rate * (item.discount / 100)), 0);
   const discountedPrice = subtotal - totalDiscount;
   const taxAmount = (Number(invoice.tax_amount) || 0) * discountedPrice / 100;
   const totalAmount = discountedPrice + taxAmount;

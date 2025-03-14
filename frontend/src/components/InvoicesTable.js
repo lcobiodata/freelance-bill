@@ -63,7 +63,9 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
                 <TableRow key={invoice.invoice_number}>
                   <TableCell>{invoice.invoice_number}</TableCell>
                   <TableCell>{invoice.client || "Unknown"}</TableCell>
-                  <TableCell>${invoice.total_amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    ${invoice.total_amount !== undefined ? Number(invoice.total_amount).toFixed(2) : "N/A"}
+                  </TableCell>
                   <TableCell>{invoice.status}</TableCell>
                   <TableCell>
                     {invoice.status !== "Paid" && (

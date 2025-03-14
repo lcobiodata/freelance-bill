@@ -269,8 +269,8 @@ const CreateInvoice = () => {
                       <TableCell>{item.description}</TableCell>
                       <TableCell>{item.rate}</TableCell>
                       <TableCell>{item.discount}</TableCell>
-                      <TableCell>{item.grossAmount ? item.grossAmount.toFixed(2) : "N/A"}</TableCell>
-                      <TableCell>{item.netAmount ? item.netAmount.toFixed(2) : "N/A"}</TableCell>
+                      <TableCell>{item.grossAmount !== undefined ? Number(item.grossAmount).toFixed(2) : "N/A"}</TableCell>
+                      <TableCell>{item.netAmount !== undefined ? Number(item.netAmount).toFixed(2) : "N/A"}</TableCell>
                       <TableCell>
                         <IconButton onClick={() => editItem(index)} color="primary">
                           <Edit />
