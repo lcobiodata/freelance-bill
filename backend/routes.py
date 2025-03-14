@@ -5,7 +5,7 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus
+from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus, Currency, InvoiceUnit
 from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
@@ -398,12 +398,13 @@ def create_invoice():
     client_id = data.get("client_id")
     issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
     due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
+    currency = Currency[data.get("currency")]
     subtotal = data.get("subtotal")
     tax_amount = data.get("tax_amount", 0.0)
     discount = data.get("discount", 0.0)
     total_amount = data.get("total_amount")
     status = data.get("status", "Unpaid")
-    payment_method = data.get("payment_method", "Cash")
+    payment_method = PaymentMethod[data.get("payment_method")]
     items = data.get("items", [])
 
     # Convert status and payment_method to Enum values
@@ -422,6 +423,7 @@ def create_invoice():
         client_id=client_id,
         issue_date=issue_date,
         due_date=due_date,
+        currency=currency,
         subtotal=subtotal,
         tax_amount=tax_amount,
         discount=discount,
@@ -454,13 +456,23 @@ def add_invoice_item(invoice_id):
         return jsonify({"message": "Invoice not found"}), 404
 
     data = request.get_json()
+    description = data.get("description")
+    quantity = int(data.get("quantity"))
+    unit = InvoiceUnit[data.get("unit")]
+    rate = float(data.get("rate"))
+    tax = float(data.get("tax"))
+    amount = quantity * rate * (1 + tax / 100)  # Calculate the amount based on quantity, rate, and tax
+
     invoice_item = InvoiceItem(
         invoice_id=invoice_id,
-        description=data.get("description"),
-        quantity=data.get("quantity"),
-        rate=data.get("rate"),
-        amount=data.get("amount")
+        description=description,
+        quantity=quantity,
+        unit=unit,
+        rate=rate,
+        tax=tax,
+        amount=amount
     )
+
     db.session.add(invoice_item)
     db.session.commit()
     return jsonify({"message": "Item added successfully"}), 201

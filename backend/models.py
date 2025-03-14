@@ -66,7 +66,7 @@ class Invoice(db.Model):
     currency = db.Column(SQLAlchemyEnum(Currency))
     subtotal = db.Column(db.Float)
     tax_amount = db.Column(db.Float)
-    discount = db.Column(db.Float, default=0.0)
+    total_discount = db.Column(db.Float, default=0.0)
     total_amount = db.Column(db.Float)
     status = db.Column(SQLAlchemyEnum(InvoiceStatus), default=InvoiceStatus.UNPAID)
     payment_method = db.Column(SQLAlchemyEnum(PaymentMethod))
@@ -82,6 +82,7 @@ class InvoiceItem(db.Model):
     quantity = db.Column(db.Float)
     unit = db.Column(SQLAlchemyEnum(InvoiceUnit))
     rate = db.Column(db.Float)
+    tax = db.Column(db.Float)
     amount = db.Column(db.Float)
 
     invoice = db.relationship('Invoice', backref='items')
