@@ -44,7 +44,7 @@ const CreateInvoice = () => {
     items: []
   });
 
-  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: 0, grossAmount: 0, netAmount: 0 });
+  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: "", grossAmount: 0, netAmount: 0 });
   const [editIndex, setEditIndex] = useState(null); // Track editing index
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
