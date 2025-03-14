@@ -36,14 +36,14 @@ const CreateInvoice = () => {
     due_date: "",
     subtotal: 0,
     tax_amount: 0,
-    discount: 0,
+    total_discount: 0,
     total_amount: 0,
     status: "Unpaid",
     payment_method: "",
     items: []
   });
 
-  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", amount: "" });
+  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: 0, grossAmount: 0, netAmount: 0 });
   const [editIndex, setEditIndex] = useState(null); // Track editing index
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -55,13 +55,13 @@ const CreateInvoice = () => {
   }, []);
 
   useEffect(() => {
-    // Recalculate total amount whenever tax_amount, discount, or isConfirmed changes
-    const newSubtotal = invoice.items.reduce((sum, item) => sum + item.amount, 0);
-    const tax = parseFloat(invoice.tax_amount) || 0;
-    const discount = parseFloat(invoice.discount) || 0;
-    const newTotal = newSubtotal + tax - discount;
-    setInvoice((prevInvoice) => ({ ...prevInvoice, subtotal: newSubtotal, total_amount: newTotal }));
-  }, [invoice.tax_amount, invoice.discount, isConfirmed]);
+    // Recalculate total amount whenever tax_amount, total_discount, or isConfirmed changes
+    const newSubtotal = invoice.items.reduce((sum, item) => sum + item.grossAmount, 0);
+    const totalDiscount = invoice.items.reduce((sum, item) => sum + (item.quantity * item.rate * item.discount / 100), 0);
+    const tax = (parseFloat(invoice.tax_amount) || 0) * newSubtotal / 100;
+    const newTotal = newSubtotal + tax - totalDiscount;
+    setInvoice((prevInvoice) => ({ ...prevInvoice, subtotal: newSubtotal, total_discount: totalDiscount, total_amount: newTotal }));
+  }, [invoice.tax_amount, invoice.items, isConfirmed]);
 
   const fetchClients = async () => {
     const response = await fetch(`${API_URL}/clients`, {
@@ -90,44 +90,50 @@ const CreateInvoice = () => {
   };
 
   const handleItemChange = (e) => {
-    setNewItem({ ...newItem, [e.target.name]: e.target.value });
-    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    const { name, value } = e.target;
+    const updatedItem = { ...newItem, [name]: value };
+    if (name === "quantity" || name === "rate" || name === "discount") {
+      const quantity = parseFloat(updatedItem.quantity) || 0;
+      const rate = parseFloat(updatedItem.rate) || 0;
+      const discount = parseFloat(updatedItem.discount) || 0;
+      updatedItem.grossAmount = quantity * rate;
+      updatedItem.netAmount = quantity * rate * (1 - discount / 100);
+    }
+    setNewItem(updatedItem);
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   // ✅ **Add or Edit Item**
   const saveItem = () => {
-    const { description, quantity, rate } = newItem;
+    const { description, quantity, rate, discount } = newItem;
     const newErrors = {};
 
     if (!description.trim()) newErrors.description = "Description is required.";
     if (!quantity.trim()) newErrors.quantity = "Quantity is required.";
     if (!rate.trim()) newErrors.rate = "Rate is required.";
+    if (discount < 0 || discount > 100) newErrors.discount = "Discount must be between 0 and 100.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const itemAmount = parseFloat(quantity) * parseFloat(rate);
+    const grossAmount = parseFloat(quantity) * parseFloat(rate);
+    const netAmount = grossAmount * (1 - parseFloat(discount) / 100);
     const updatedItems = [...invoice.items];
 
     if (editIndex !== null) {
       // ✅ **Editing an existing item**
-      updatedItems[editIndex] = { ...newItem, amount: itemAmount };
+      updatedItems[editIndex] = { ...newItem, grossAmount, netAmount };
       setEditIndex(null); // Reset edit mode
     } else {
       // ✅ **Adding a new item**
-      updatedItems.push({ ...newItem, amount: itemAmount });
+      updatedItems.push({ ...newItem, grossAmount, netAmount });
     }
 
-    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.amount, 0);
-    const tax = parseFloat(invoice.tax_amount) || 0;
-    const discount = parseFloat(invoice.discount) || 0;
-    const newTotal = newSubtotal + tax - discount;
+    setInvoice({ ...invoice, items: updatedItems });
 
-    setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
-
-    setNewItem({ description: "", quantity: "", rate: "", amount: "" });
+    setNewItem({ description: "", quantity: "", rate: "", discount: 0, grossAmount: 0, netAmount: 0 });
     setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
@@ -141,12 +147,7 @@ const CreateInvoice = () => {
   // ✅ **Delete Item**
   const deleteItem = (index) => {
     const updatedItems = invoice.items.filter((_, i) => i !== index);
-    const newSubtotal = updatedItems.reduce((sum, item) => sum + item.amount, 0);
-    const tax = parseFloat(invoice.tax_amount) || 0;
-    const discount = parseFloat(invoice.discount) || 0;
-    const newTotal = newSubtotal + tax - discount;
-
-    setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
+    setInvoice({ ...invoice, items: updatedItems });
     setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
@@ -229,8 +230,8 @@ const CreateInvoice = () => {
               onChange={handleChange} InputLabelProps={{ shrink: true }}
               error={!!errors.due_date} helperText={errors.due_date}
             />
-            <TextField label="Tax Amount" type="number" name="tax_amount" fullWidth margin="normal" onChange={handleChange} />
-            <TextField label="Discount" type="number" name="discount" fullWidth margin="normal" onChange={handleChange} />
+            <TextField label="Tax (%)" type="number" name="tax_amount" fullWidth margin="normal"
+              onChange={handleChange} inputProps={{ min: 0, max: 100 }} />
 
             <TextField select label="Payment Method *" name="payment_method" fullWidth margin="normal"
               value={invoice.payment_method} onChange={handleChange}
@@ -253,7 +254,9 @@ const CreateInvoice = () => {
                     <TableCell>Description</TableCell>
                     <TableCell>Quantity</TableCell>
                     <TableCell>Rate</TableCell>
-                    <TableCell>Amount</TableCell>
+                    <TableCell>Discount (%)</TableCell>
+                    <TableCell>Gross</TableCell>
+                    <TableCell>Net</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -263,7 +266,9 @@ const CreateInvoice = () => {
                       <TableCell>{item.description}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{item.rate}</TableCell>
-                      <TableCell>{item.amount}</TableCell>
+                      <TableCell>{item.discount}</TableCell>
+                      <TableCell>{item.grossAmount.toFixed(2)}</TableCell>
+                      <TableCell>{item.netAmount.toFixed(2)}</TableCell>
                       <TableCell>
                         <IconButton onClick={() => editItem(index)} color="primary">
                           <Edit />
@@ -281,6 +286,7 @@ const CreateInvoice = () => {
             <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
             <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
             <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
+            <TextField label="Discount (%)" type="number" name="discount" fullWidth margin="normal" value={newItem.discount} onChange={handleItemChange} inputProps={{ min: 0, max: 100 }} error={!!errors.discount} helperText={errors.discount} />
 
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
               <Button variant="contained" color="primary" onClick={saveItem}>
