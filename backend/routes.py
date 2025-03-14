@@ -385,7 +385,7 @@ def get_invoices():
         "currency": invoice.currency.name,
         "tax": invoice.tax,
         "status": invoice.status.value,  # Convert enum to string
-        "payment_method": invoice.payment_method.value  # Convert enum to string
+        "payment_method": invoice.payment_method.value,  # Convert enum to string
         "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None
     } for invoice in invoices]), 200
 
