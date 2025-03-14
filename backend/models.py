@@ -1,8 +1,20 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum as SQLAlchemyEnum
 from enum import Enum
+import pycountry
 
 db = SQLAlchemy()
+
+# ----------------- Enumerations -----------------
+class InvoiceStatus(Enum):
+    UNPAID = 'Unpaid'
+    PAID = 'Paid'
+    OVERDUE = 'Overdue'
+    CANCELLED = 'Cancelled'
+
+class InvoiceUnit(Enum):
+    HOUR = 'Hour'
+    ITEM = 'Item'
 
 class PaymentMethod(Enum):
     CASH = 'Cash'
@@ -10,11 +22,15 @@ class PaymentMethod(Enum):
     CREDIT_CARD = 'Credit Card'
     PAYPAL = 'PayPal'
 
-class InvoiceStatus(Enum):
-    UNPAID = 'Unpaid'
-    PAID = 'Paid'
-    OVERDUE = 'Overdue'
-    CANCELLED = 'Cancelled'
+# Wrapper class for Currency Enum
+class Currency(Enum):
+    pass
+
+# Fetch all ISO 4217 currencies and dynamically add them to the Currency Enum
+for currency in pycountry.currencies:
+    setattr(Currency, currency.alpha_3, currency.alpha_3)
+
+# ----------------- Models -----------------
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,6 +63,7 @@ class Invoice(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
     issue_date = db.Column(db.Date)
     due_date = db.Column(db.Date)
+    currency = db.Column(SQLAlchemyEnum(Currency))
     subtotal = db.Column(db.Float)
     tax_amount = db.Column(db.Float)
     discount = db.Column(db.Float, default=0.0)
@@ -63,6 +80,7 @@ class InvoiceItem(db.Model):
     invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'))
     description = db.Column(db.String(200))
     quantity = db.Column(db.Float)
+    unit = db.Column(SQLAlchemyEnum(InvoiceUnit))
     rate = db.Column(db.Float)
     amount = db.Column(db.Float)
 
