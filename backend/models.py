@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum as SQLAlchemyEnum
 from enum import Enum
-import pycountry
 
 db = SQLAlchemy()
 
@@ -22,13 +21,11 @@ class PaymentMethod(Enum):
     CREDIT_CARD = 'Credit Card'
     PAYPAL = 'PayPal'
 
-# Wrapper class for Currency Enum
 class Currency(Enum):
-    pass
-
-# Fetch all ISO 4217 currencies and dynamically add them to the Currency Enum
-for currency in pycountry.currencies:
-    setattr(Currency, currency.alpha_3, currency.alpha_3)
+    USD = "USD"
+    EUR = "EUR"
+    GBP = "GBP"
+    # Add more currencies as needed
 
 # ----------------- Models -----------------
 
