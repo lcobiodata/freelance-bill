@@ -35,7 +35,7 @@ const Login = () => {
       });
 
       localStorage.setItem("token", res.data.token);
-      setMessage(<Alert severity="success">Login successful! Redirecting...</Alert>);
+      setMessage(<Alert severity="success">Login successful!</Alert>);
       
       setIsRedirecting(true); // 🔄 Show loading spinner
 
@@ -69,7 +69,7 @@ const Login = () => {
       });
 
       localStorage.setItem("token", res.data.token);
-      setMessage(<Alert severity="success">Google login successful! Redirecting...</Alert>);
+      setMessage(<Alert severity="success">Google login successful!</Alert>);
 
       setIsRedirecting(true); // 🔄 Show loading spinner
 

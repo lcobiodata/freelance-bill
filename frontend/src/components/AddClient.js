@@ -61,7 +61,7 @@ const AddClient = () => {
       const data = await res.json();
       console.log("Client added:", data);
 
-      setMessage(<Alert severity="success">Client added successfully! Redirecting...</Alert>);
+      setMessage(<Alert severity="success">Client added successfully!</Alert>);
       setIsSubmitting(false);
       setIsRedirecting(true); // 🔄 Show loading spinner for redirect
 

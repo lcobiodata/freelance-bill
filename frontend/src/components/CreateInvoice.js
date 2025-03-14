@@ -169,7 +169,7 @@ const CreateInvoice = () => {
 
       if (!response.ok) throw new Error("Failed to create invoice.");
 
-      setMessage(<Alert severity="success">Invoice created successfully! Redirecting...</Alert>);
+      setMessage(<Alert severity="success">Invoice created successfully!</Alert>);
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       setMessage(<Alert severity="error">Failed to create invoice. Please try again.</Alert>);
