@@ -66,7 +66,7 @@ const Dashboard = () => {
         {token ? (
           <DashboardTabs tabIndex={tabIndex} setTabIndex={setTabIndex}>
             <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} />
-            <ClientsTable clients={clients} loading={loadingClients} />
+            <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />
           </DashboardTabs>
         
         ) : (

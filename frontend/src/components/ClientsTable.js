@@ -25,7 +25,11 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
   };
 
   // ✅ Save changes to the API
+  const [isSaving, setIsSaving] = useState(false); // ✅ Loading state for saving
+
   const handleSaveChanges = async () => {
+    setIsSaving(true); // ✅ Show loading spinner
+
     try {
       await fetch(`${API_URL}/clients/${editingClient.id}`, {
         method: "PUT",
@@ -36,10 +40,14 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
         body: JSON.stringify(editedClient),
       });
 
-      setEditingClient(null); // Close the dialog
-      fetchClients(); // Refresh client list
+      setTimeout(() => {
+        fetchClients(); // ✅ Delay refresh for 2 seconds
+        setIsSaving(false); // ✅ Hide spinner
+        setEditingClient(null); // ✅ Close dialog after delay
+      }, 2000);
     } catch (error) {
       console.error("Error updating client:", error);
+      setIsSaving(false); // ✅ Ensure spinner stops on error
     }
   };
 
@@ -106,7 +114,15 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditingClient(null)} color="secondary">Cancel</Button>
-          <Button onClick={handleSaveChanges} color="primary" variant="contained">Save</Button>
+          <Button 
+            onClick={handleSaveChanges} 
+            color="primary" 
+            variant="contained" 
+            disabled={isSaving} // ✅ Disable while saving
+          >
+            {isSaving ? <CircularProgress size={24} color="inherit" /> : "Save"}
+          </Button>
+
         </DialogActions>
       </Dialog>
     </>
