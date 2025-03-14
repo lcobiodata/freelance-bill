@@ -499,6 +499,7 @@ def mark_invoice_paid(invoice_id):
         return jsonify({"message": "Invoice not found"}), 404
     # invoice.status = "Paid"
     invoice.status = InvoiceStatus.PAID
+    invoice.payment_date = datetime.now().date()
     db.session.commit()
     return jsonify({"message": "Invoice marked as paid"}), 200
 
