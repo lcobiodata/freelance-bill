@@ -382,12 +382,11 @@ def get_invoices():
         "client": invoice.client.name if invoice.client else "Unknown",
         "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
         "due_date": invoice.due_date.strftime("%Y-%m-%d"),
-        "subtotal": invoice.subtotal,
-        "tax_amount": invoice.tax_amount,
-        "discount": invoice.discount,
-        "total_amount": invoice.total_amount,
+        "currency": invoice.currency.name,
+        "tax": invoice.tax,
         "status": invoice.status.value,  # Convert enum to string
         "payment_method": invoice.payment_method.value  # Convert enum to string
+        "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None
     } for invoice in invoices]), 200
 
 @routes_bp.route("/invoice", methods=["POST"])
@@ -399,10 +398,7 @@ def create_invoice():
     issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
     due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
     currency = Currency[data.get("currency")]
-    subtotal = data.get("subtotal")
-    tax_amount = data.get("tax_amount", 0.0)
-    discount = data.get("discount", 0.0)
-    total_amount = data.get("total_amount")
+    tax = data.get("tax", 0.0)
     status = data.get("status", "Unpaid")
     payment_method = PaymentMethod[data.get("payment_method")]
     items = data.get("items", [])
@@ -424,10 +420,7 @@ def create_invoice():
         issue_date=issue_date,
         due_date=due_date,
         currency=currency,
-        subtotal=subtotal,
-        tax_amount=tax_amount,
-        discount=discount,
-        total_amount=total_amount,
+        tax=tax,
         status=status_enum,
         payment_method=payment_method_enum
     )
@@ -437,15 +430,56 @@ def create_invoice():
     for item in items:
         invoice_item = InvoiceItem(
             invoice_id=invoice.id,
-            description=item.get("description"),
             quantity=item.get("quantity"),
+            unit=InvoiceUnit[item.get("unit")],
+            description=item.get("description"),
             rate=item.get("rate"),
-            amount=item.get("amount")
+            discount=item.get("discount", 0.0)
         )
         db.session.add(invoice_item)
 
     db.session.commit()
     return jsonify({"message": "Invoice created successfully", "invoice_id": invoice.id}), 201
+
+@routes_bp.route("/invoice/<int:invoice_id>", methods=["GET"])
+@jwt_required()
+def get_invoice(invoice_id):
+    """ Fetch a single invoice by ID """
+    invoice = Invoice.query.get(invoice_id)
+    if not invoice:
+        return jsonify({"message": "Invoice not found"}), 404
+    
+    # Check due date and update status if overdue
+    today = datetime.today().date()
+    if invoice.due_date < today and invoice.status == InvoiceStatus.UNPAID:
+        invoice.status = InvoiceStatus.OVERDUE
+        db.session.commit()
+    
+    # Query again to ensure changes are reflected
+    invoice = Invoice.query.get(invoice_id)
+
+    # Query the items for the invoice
+    items = InvoiceItem.query.filter_by(invoice_id=invoice_id).all()
+
+    return jsonify({
+        "invoice_number": invoice.invoice_number,
+        "client": invoice.client.name if invoice.client else "Unknown",
+        "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
+        "due_date": invoice.due_date.strftime("%Y-%m-%d"),
+        "currency": invoice.currency.name,
+        "tax": invoice.tax,
+        "status": invoice.status.value,  # Convert enum to string
+        "payment_method": invoice.payment_method.value,  # Convert enum to string
+        "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None,
+        "items": [{
+            "id": item.id,
+            "description": item.description,
+            "quantity": item.quantity,
+            "unit": item.unit.name,
+            "rate": item.rate,
+            "discount": item.discount
+        } for item in items]
+    }), 200
 
 @routes_bp.route("/invoice/<int:invoice_id>/items", methods=["POST"])
 @jwt_required()
@@ -456,21 +490,13 @@ def add_invoice_item(invoice_id):
         return jsonify({"message": "Invoice not found"}), 404
 
     data = request.get_json()
-    description = data.get("description")
-    quantity = int(data.get("quantity"))
-    unit = InvoiceUnit[data.get("unit")]
-    rate = float(data.get("rate"))
-    tax = float(data.get("tax"))
-    amount = quantity * rate * (1 + tax / 100)  # Calculate the amount based on quantity, rate, and tax
-
     invoice_item = InvoiceItem(
         invoice_id=invoice_id,
-        description=description,
-        quantity=quantity,
-        unit=unit,
-        rate=rate,
-        tax=tax,
-        amount=amount
+        description=data.get("description"),
+        quantity=float(data.get("quantity")),
+        unit=InvoiceUnit[data.get("unit")],
+        rate=float(data.get("rate")),
+        discount=float(data.get("discount", 0.0))
     )
 
     db.session.add(invoice_item)
@@ -487,19 +513,6 @@ def delete_invoice_item(item_id):
     db.session.delete(item)
     db.session.commit()
     return jsonify({"message": "Item deleted successfully"}), 200
-
-
-@routes_bp.route("/invoice/<int:invoice_id>", methods=["DELETE"])
-@jwt_required()
-def delete_invoice(invoice_id):
-    """ Delete an invoice """
-    invoice = Invoice.query.get(invoice_id)
-    if not invoice:
-        return jsonify({"message": "Invoice not found"}), 404
-    db.session.delete(invoice)
-    db.session.commit()
-    return jsonify({"message": "Invoice deleted successfully"}), 200
-
 
 # -------------------- Payment Tracking --------------------
 @routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])

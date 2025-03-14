@@ -34,6 +34,7 @@ const CreateInvoice = () => {
     client_id: "",
     issue_date: "",
     due_date: "",
+    currency: "USD", // Default currency
     subtotal: 0,
     tax_amount: 0,
     total_discount: 0,
@@ -230,6 +231,15 @@ const CreateInvoice = () => {
               onChange={handleChange} InputLabelProps={{ shrink: true }}
               error={!!errors.due_date} helperText={errors.due_date}
             />
+            <TextField label="Currency *" select name="currency" fullWidth margin="normal"
+              value={invoice.currency} onChange={handleChange}
+              error={!!errors.currency} helperText={errors.currency}
+            >
+              <MenuItem value="USD">USD</MenuItem>
+              <MenuItem value="EUR">EUR</MenuItem>
+              <MenuItem value="GBP">GBP</MenuItem>
+              {/* Add more currencies as needed */}
+            </TextField>
             <TextField label="Tax (%)" type="number" name="tax_amount" fullWidth margin="normal"
               onChange={handleChange} inputProps={{ min: 0, max: 100 }} />
 
