@@ -35,10 +35,7 @@ const CreateInvoice = () => {
     issue_date: "",
     due_date: "",
     currency: "USD", // Default currency
-    subtotal: 0,
     tax_amount: 0,
-    total_discount: 0,
-    total_amount: 0,
     status: "Unpaid",
     payment_method: "",
     items: []
@@ -54,15 +51,6 @@ const CreateInvoice = () => {
   useEffect(() => {
     fetchClients();
   }, []);
-
-  useEffect(() => {
-    // Recalculate total amount whenever tax_amount, total_discount, or isConfirmed changes
-    const newSubtotal = invoice.items.reduce((sum, item) => sum + item.grossAmount, 0);
-    const totalDiscount = invoice.items.reduce((sum, item) => sum + (item.quantity * item.rate * item.discount / 100), 0);
-    const tax = (parseFloat(invoice.tax_amount) || 0) * newSubtotal / 100;
-    const newTotal = newSubtotal + tax - totalDiscount;
-    setInvoice((prevInvoice) => ({ ...prevInvoice, subtotal: newSubtotal, total_discount: totalDiscount, total_amount: newTotal }));
-  }, [invoice.tax_amount, invoice.items, isConfirmed]);
 
   const fetchClients = async () => {
     const response = await fetch(`${API_URL}/clients`, {
@@ -93,13 +81,6 @@ const CreateInvoice = () => {
   const handleItemChange = (e) => {
     const { name, value } = e.target;
     const updatedItem = { ...newItem, [name]: value };
-    if (name === "quantity" || name === "rate" || name === "discount") {
-      const quantity = parseFloat(updatedItem.quantity) || 0;
-      const rate = parseFloat(updatedItem.rate) || 0;
-      const discount = parseFloat(updatedItem.discount) || 0;
-      updatedItem.grossAmount = quantity * rate;
-      updatedItem.netAmount = quantity * rate * (1 - discount / 100);
-    }
     setNewItem(updatedItem);
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -119,22 +100,20 @@ const CreateInvoice = () => {
       return;
     }
 
-    const grossAmount = parseFloat(quantity) * parseFloat(rate);
-    const netAmount = grossAmount * (1 - parseFloat(discount) / 100);
     const updatedItems = [...invoice.items];
 
     if (editIndex !== null) {
       // ✅ **Editing an existing item**
-      updatedItems[editIndex] = { ...newItem, grossAmount, netAmount };
+      updatedItems[editIndex] = { ...newItem };
       setEditIndex(null); // Reset edit mode
     } else {
       // ✅ **Adding a new item**
-      updatedItems.push({ ...newItem, grossAmount, netAmount });
+      updatedItems.push({ ...newItem });
     }
 
     setInvoice({ ...invoice, items: updatedItems });
 
-    setNewItem({ description: "", quantity: "", rate: "", discount: 0, grossAmount: 0, netAmount: 0 });
+    setNewItem({ description: "", quantity: "", rate: "", discount: 0 });
     setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
@@ -176,13 +155,20 @@ const CreateInvoice = () => {
     setIsRedirecting(true);
 
     try {
+      // Log the invoice data being submitted
+      console.log("Submitting invoice:", invoice);
+
       const response = await fetch(`${API_URL}/invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(invoice),
       });
 
-      if (!response.ok) throw new Error("Failed to create invoice.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error creating invoice:", errorData); // Log the error response from the server
+        throw new Error("Failed to create invoice.");
+      }
 
       setMessage(<Alert severity="success">Invoice created successfully!</Alert>);
       setTimeout(() => navigate("/dashboard"), 2000);

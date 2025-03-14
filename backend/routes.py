@@ -397,15 +397,24 @@ def create_invoice():
     client_id = data.get("client_id")
     issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
     due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
-    currency = Currency[data.get("currency")]
+    currency_code = data.get("currency").upper()
+    currency = getattr(Currency, currency_code, None)
+
+    if not currency:
+        return jsonify({"error": f"Invalid currency '{currency_code}'"}), 400
+
     tax = data.get("tax", 0.0)
     status = data.get("status", "Unpaid")
-    payment_method = PaymentMethod[data.get("payment_method")]
+    payment_method = next((pm for pm in PaymentMethod if pm.value == data.get("payment_method")), None)
+
+    if not payment_method:
+        return jsonify({"error": f"Invalid payment method '{data.get('payment_method')}'"}), 400
+
     items = data.get("items", [])
 
     # Convert status and payment_method to Enum values
     status_enum = InvoiceStatus[status.upper()]
-    payment_method_enum = PaymentMethod[payment_method.replace(" ", "_").upper()]
+    payment_method_enum = payment_method  # No need to reassign
 
     current_user = get_jwt_identity()
     user_id = User.query.filter_by(username=current_user).first().id
@@ -428,10 +437,14 @@ def create_invoice():
     db.session.flush()  # Ensure invoice ID is generated before adding items
 
     for item in items:
+        unit_key = item.get("unit")
+        if not unit_key or unit_key not in InvoiceUnit.__members__:
+            return jsonify({"error": f"Invalid or missing unit '{unit_key}'"}), 400
+        unit = InvoiceUnit[unit_key]
         invoice_item = InvoiceItem(
             invoice_id=invoice.id,
             quantity=item.get("quantity"),
-            unit=InvoiceUnit[item.get("unit")],
+            unit=unit,
             description=item.get("description"),
             rate=item.get("rate"),
             discount=item.get("discount", 0.0)
