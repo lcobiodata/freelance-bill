@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material"; // Import icons
 import { useNavigate } from "react-router-dom";
+import InvoiceSummary from "./InvoiceSummary"; // Import InvoiceSummary component
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -52,6 +53,15 @@ const CreateInvoice = () => {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  useEffect(() => {
+    // Recalculate total amount whenever tax_amount, discount, or isConfirmed changes
+    const newSubtotal = invoice.items.reduce((sum, item) => sum + item.amount, 0);
+    const tax = parseFloat(invoice.tax_amount) || 0;
+    const discount = parseFloat(invoice.discount) || 0;
+    const newTotal = newSubtotal + tax - discount;
+    setInvoice((prevInvoice) => ({ ...prevInvoice, subtotal: newSubtotal, total_amount: newTotal }));
+  }, [invoice.tax_amount, invoice.discount, isConfirmed]);
 
   const fetchClients = async () => {
     const response = await fetch(`${API_URL}/clients`, {
@@ -118,12 +128,14 @@ const CreateInvoice = () => {
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
 
     setNewItem({ description: "", quantity: "", rate: "", amount: "" });
+    setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
   // ✅ **Edit Item**
   const editItem = (index) => {
     setNewItem(invoice.items[index]);
     setEditIndex(index);
+    setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
   // ✅ **Delete Item**
@@ -135,6 +147,7 @@ const CreateInvoice = () => {
     const newTotal = newSubtotal + tax - discount;
 
     setInvoice({ ...invoice, items: updatedItems, subtotal: newSubtotal, total_amount: newTotal });
+    setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
   // Validate before submission
@@ -269,24 +282,19 @@ const CreateInvoice = () => {
             <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
             <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
 
-        <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
-          <Button variant="contained" color="primary" onClick={saveItem}>
-            {editIndex !== null ? "Update Item" : "Add Item"}
-          </Button>
-        </Box>
+            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+              <Button variant="contained" color="primary" onClick={saveItem}>
+                {editIndex !== null ? "Update Item" : "Add Item"}
+              </Button>
+            </Box>
 
-        {/* ✅ Checkbox for confirmation */}
-        <FormControlLabel
-          control={<Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} />}
-          label="I hereby confirm that all the information provided is correct and true."
-          sx={{ mt: 3 }}
-        />
-
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-          <Button variant="contained" color="secondary" onClick={handleSubmit} disabled={!isConfirmed || isRedirecting}>
-            Submit Invoice
-          </Button>
-        </Box>
+            {/* ✅ Checkbox for confirmation */}
+            <FormControlLabel
+              control={<Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} />}
+              label="I hereby confirm that all the information provided is correct and true."
+              sx={{ mt: 3 }}
+            />
+            <InvoiceSummary invoice={invoice} isConfirmed={isConfirmed} handleSubmit={handleSubmit} />
           </>
         )}
       </Paper>
