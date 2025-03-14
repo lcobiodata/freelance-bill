@@ -41,7 +41,7 @@ const CreateInvoice = () => {
     items: []
   });
 
-  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: "", grossAmount: 0, netAmount: 0 });
+  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: "", unit: "" });
   const [editIndex, setEditIndex] = useState(null); // Track editing index
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -87,33 +87,37 @@ const CreateInvoice = () => {
 
   // ✅ **Add or Edit Item**
   const saveItem = () => {
-    const { description, quantity, rate, discount } = newItem;
+    const { description, quantity, rate, discount, unit } = newItem;
     const newErrors = {};
 
     if (!description.trim()) newErrors.description = "Description is required.";
     if (!quantity.trim()) newErrors.quantity = "Quantity is required.";
     if (!rate.trim()) newErrors.rate = "Rate is required.";
     if (discount < 0 || discount > 100) newErrors.discount = "Discount must be between 0 and 100.";
+    if (!unit.trim()) newErrors.unit = "Unit is required.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
+    const grossAmount = parseFloat(quantity) * parseFloat(rate);
+    const netAmount = grossAmount * (1 - parseFloat(discount) / 100);
+
     const updatedItems = [...invoice.items];
 
     if (editIndex !== null) {
       // ✅ **Editing an existing item**
-      updatedItems[editIndex] = { ...newItem };
+      updatedItems[editIndex] = { ...newItem, grossAmount, netAmount, unit: unit.toUpperCase() };
       setEditIndex(null); // Reset edit mode
     } else {
       // ✅ **Adding a new item**
-      updatedItems.push({ ...newItem });
+      updatedItems.push({ ...newItem, grossAmount, netAmount, unit: unit.toUpperCase() });
     }
 
     setInvoice({ ...invoice, items: updatedItems });
 
-    setNewItem({ description: "", quantity: "", rate: "", discount: 0 });
+    setNewItem({ description: "", quantity: "", rate: "", discount: "", unit: "" });
     setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
@@ -247,8 +251,9 @@ const CreateInvoice = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Description</TableCell>
                     <TableCell>Quantity</TableCell>
+                    <TableCell>Unit</TableCell>
+                    <TableCell>Description</TableCell>
                     <TableCell>Rate</TableCell>
                     <TableCell>Discount (%)</TableCell>
                     <TableCell>Gross</TableCell>
@@ -259,12 +264,13 @@ const CreateInvoice = () => {
                 <TableBody>
                   {invoice.items.map((item, index) => (
                     <TableRow key={index}>
-                      <TableCell>{item.description}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.unit}</TableCell>
+                      <TableCell>{item.description}</TableCell>
                       <TableCell>{item.rate}</TableCell>
                       <TableCell>{item.discount}</TableCell>
-                      <TableCell>{item.grossAmount.toFixed(2)}</TableCell>
-                      <TableCell>{item.netAmount.toFixed(2)}</TableCell>
+                      <TableCell>{item.grossAmount ? item.grossAmount.toFixed(2) : "N/A"}</TableCell>
+                      <TableCell>{item.netAmount ? item.netAmount.toFixed(2) : "N/A"}</TableCell>
                       <TableCell>
                         <IconButton onClick={() => editItem(index)} color="primary">
                           <Edit />
@@ -279,8 +285,22 @@ const CreateInvoice = () => {
               </Table>
             </TableContainer>
 
-            <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
             <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
+            <TextField
+              select
+              label="Unit *"
+              name="unit"
+              fullWidth
+              margin="normal"
+              value={newItem.unit}
+              onChange={handleItemChange}
+              error={!!errors.unit}
+              helperText={errors.unit}
+            >
+              <MenuItem value="ITEM">Item</MenuItem>
+              <MenuItem value="HOUR">Hour</MenuItem>
+            </TextField>
+            <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
             <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
             <TextField label="Discount (%)" type="number" name="discount" fullWidth margin="normal" value={newItem.discount} onChange={handleItemChange} inputProps={{ min: 0, max: 100 }} error={!!errors.discount} helperText={errors.discount} />
 
