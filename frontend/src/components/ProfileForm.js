@@ -50,9 +50,9 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
 
   return (
     <Paper elevation={4} sx={{ p: 4, width: "100%", maxWidth: 600, mx: "auto" }}>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
+      {/* <Typography variant="h5" fontWeight="bold" gutterBottom>
         Profile Information
-      </Typography>
+      </Typography> */}
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
