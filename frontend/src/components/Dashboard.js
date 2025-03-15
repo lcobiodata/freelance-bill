@@ -91,8 +91,8 @@ const Dashboard = () => {
         {token ? (
           <DashboardTabs tabIndex={tabIndex} setTabIndex={setTabIndex}>
             <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />
-            <InvoicesTable invoices={invoices} loading={loadingInvoices} />
             <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />
+            <InvoicesTable invoices={invoices} loading={loadingInvoices} />
           </DashboardTabs>
         ) : (
           <Typography variant="body1" color="error">

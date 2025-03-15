@@ -12,8 +12,8 @@ export const DashboardTabs = ({ tabIndex, setTabIndex, children }) => {
         sx={{ borderRight: 1, borderColor: "divider", minWidth: 180 }}
       >
         <Tab label="Profile" />
-        <Tab label="Invoices" />
         <Tab label="Clients" />
+        <Tab label="Invoices" />
       </Tabs>
 
       {children.map((child, index) => (
