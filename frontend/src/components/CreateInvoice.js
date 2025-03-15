@@ -35,13 +35,13 @@ const CreateInvoice = () => {
     issue_date: "",
     due_date: "",
     currency: "USD", // Default currency
-    tax_amount: 0,
+    tax_rate: 0, // Default tax rate
     status: "Unpaid",
     payment_method: "",
     items: []
   });
 
-  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: "", unit: "" });
+  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: 0, unit: "" }); // Default discount
   const [editIndex, setEditIndex] = useState(null); // Track editing index
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -117,7 +117,7 @@ const CreateInvoice = () => {
 
     setInvoice({ ...invoice, items: updatedItems });
 
-    setNewItem({ description: "", quantity: "", rate: "", discount: "", unit: "" });
+    setNewItem({ description: "", quantity: "", rate: "", discount: 0, unit: "" }); // Reset with default discount
     setIsConfirmed(false); // Uncheck the disclaimer checkbox
   };
 
@@ -247,8 +247,8 @@ const CreateInvoice = () => {
               <MenuItem value="GBP">GBP</MenuItem>
               {/* Add more currencies as needed */}
             </TextField>
-            <TextField label="Tax (%)" type="number" name="tax_amount" fullWidth margin="normal"
-              onChange={handleChange} inputProps={{ min: 0, max: 100 }} />
+            <TextField label="Tax (%)" type="number" name="tax_rate" fullWidth margin="normal"
+              value={invoice.tax_rate} onChange={handleChange} inputProps={{ min: 0, max: 100 }} error={!!errors.tax_rate} helperText={errors.tax_rate} />
 
             <TextField select label="Payment Method *" name="payment_method" fullWidth margin="normal"
               value={invoice.payment_method} onChange={handleChange}
