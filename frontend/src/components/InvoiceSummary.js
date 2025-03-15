@@ -9,7 +9,7 @@ const InvoiceSummary = ({ invoice, isConfirmed, handleSubmit }) => {
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
   const totalDiscount = items.reduce((sum, item) => sum + (item.quantity * item.rate * (item.discount / 100)), 0);
   const discountedPrice = subtotal - totalDiscount;
-  const taxAmount = (Number(invoice.tax_amount) || 0) * discountedPrice / 100;
+  const taxAmount = (Number(invoice.tax_rate) || 0) * discountedPrice / 100; // Use invoice.tax_rate
   const totalAmount = discountedPrice + taxAmount;
 
   return (
