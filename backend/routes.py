@@ -303,7 +303,8 @@ def get_clients():
         "business_name": client.business_name,
         "email": client.email,
         "phone": client.phone,
-        "address": client.address
+        "address": client.address,
+        "tax_number": client.tax_number  # Include tax_number
     } for client in clients]), 200
 
 @routes_bp.route("/client", methods=["POST"])
@@ -316,6 +317,7 @@ def create_client():
     email = data.get("email")
     phone = data.get("phone")
     address = data.get("address")
+    tax_number = data.get("tax_number")  # Include tax_number
 
     current_user = get_jwt_identity()
     user_id = User.query.filter_by(username=current_user).first().id
@@ -326,7 +328,8 @@ def create_client():
         business_name=business_name,
         email=email,
         phone=phone,
-        address=address
+        address=address,
+        tax_number=tax_number  # Include tax_number
     )
     db.session.add(client)
     db.session.commit()
@@ -354,6 +357,7 @@ def update_client(client_id):
     client.email = data.get("email", client.email)
     client.phone = data.get("phone", client.phone)
     client.address = data.get("address", client.address)
+    client.tax_number = data.get("tax_number", client.tax_number)  # Include tax_number
 
     db.session.commit()
 

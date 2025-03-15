@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   CircularProgress, Button, IconButton, Dialog, DialogTitle, DialogContent, 
@@ -74,13 +74,14 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
               <TableCell>Address</TableCell>
+              <TableCell>Tax Number</TableCell> {/* Add Tax Number column */}
               <TableCell>Actions</TableCell> {/* New Column for Edit Button */}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -92,6 +93,7 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
                   <TableCell>{client.email}</TableCell>
                   <TableCell>{client.phone || "N/A"}</TableCell>
                   <TableCell>{client.address || "N/A"}</TableCell>
+                  <TableCell>{client.tax_number || "N/A"}</TableCell> {/* Display Tax Number */}
                   <TableCell>
                     {/* Edit Button */}
                     <IconButton onClick={() => handleEditClick(client)} color="primary">
