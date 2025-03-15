@@ -17,9 +17,13 @@ import {
   Alert,
   IconButton,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material"; // Import icons
+import { Edit, Delete, Add } from "@mui/icons-material"; // Import icons
 import { useNavigate } from "react-router-dom";
 import InvoiceSummary from "./InvoiceSummary"; // Import InvoiceSummary component
 
@@ -48,6 +52,9 @@ const CreateInvoice = () => {
   const [errors, setErrors] = useState({}); // Track missing fields
   const [isConfirmed, setIsConfirmed] = useState(false); // ✅ Checkbox state
 
+  const [isAddingClient, setIsAddingClient] = useState(false); // State to open/close Add Client dialog
+  const [newClient, setNewClient] = useState({ name: "", business_name: "", email: "", phone: "", address: "" }); // New client state
+
   useEffect(() => {
     fetchClients();
   }, []);
@@ -64,6 +71,11 @@ const CreateInvoice = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     const updatedInvoice = { ...invoice, [name]: value };
+
+    if (name === "client_id" && value === "new") {
+      setIsAddingClient(true); // Open Add Client dialog
+      return;
+    }
 
     setInvoice(updatedInvoice);
     setErrors((prev) => ({ ...prev, [name]: "" })); // Clear error when typing
@@ -199,6 +211,40 @@ const CreateInvoice = () => {
     }
   };
 
+  // Handle new client input changes
+  const handleNewClientChange = (e) => {
+    const { name, value } = e.target;
+    setNewClient({ ...newClient, [name]: value });
+  };
+
+  // Save new client to the API
+  const handleSaveNewClient = async () => {
+    try {
+      const response = await fetch(`${API_URL}/client`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newClient),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error adding client:", errorData);
+        throw new Error("Failed to add client.");
+      }
+
+      const addedClient = await response.json();
+      setClients([...clients, addedClient]); // Add new client to the list
+      setInvoice({ ...invoice, client_id: addedClient.id }); // Set the new client as selected
+      setIsAddingClient(false); // Close the dialog
+      setNewClient({ name: "", business_name: "", email: "", phone: "", address: "" }); // Reset new client form
+    } catch (error) {
+      console.error("Error adding client:", error);
+    }
+  };
+
   return (
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 5 }}>
@@ -223,6 +269,9 @@ const CreateInvoice = () => {
               error={!!errors.client_id}
               helperText={errors.client_id}
             >
+              <MenuItem value="new">
+                <Add /> New client
+              </MenuItem>
               {clients.map((client) => (
                 <MenuItem key={client.id} value={client.id}>
                   {client.name}
@@ -337,6 +386,27 @@ const CreateInvoice = () => {
           </>
         )}
       </Paper>
+
+      {/* Add Client Dialog */}
+      <Dialog open={isAddingClient} onClose={() => setIsAddingClient(false)}>
+        <DialogTitle>Add Client</DialogTitle>
+        <DialogContent>
+          <TextField label="Name" name="name" fullWidth margin="normal"
+            value={newClient.name} onChange={handleNewClientChange} />
+          <TextField label="Business Name" name="business_name" fullWidth margin="normal"
+            value={newClient.business_name} onChange={handleNewClientChange} />
+          <TextField label="Email" name="email" fullWidth margin="normal"
+            value={newClient.email} onChange={handleNewClientChange} />
+          <TextField label="Phone" name="phone" fullWidth margin="normal"
+            value={newClient.phone} onChange={handleNewClientChange} />
+          <TextField label="Address" name="address" fullWidth margin="normal"
+            value={newClient.address} onChange={handleNewClientChange} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsAddingClient(false)} color="secondary">Cancel</Button>
+          <Button onClick={handleSaveNewClient} color="primary" variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

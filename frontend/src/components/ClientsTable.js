@@ -4,35 +4,46 @@ import {
   CircularProgress, Button, IconButton, Dialog, DialogTitle, DialogContent, 
   DialogActions, TextField
 } from "@mui/material";
-import { Link } from "react-router-dom";
-import { Edit } from "@mui/icons-material";
+import { Edit, Add } from "@mui/icons-material";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 export const ClientsTable = ({ clients, loading, fetchClients }) => {
   const [editingClient, setEditingClient] = useState(null);
   const [editedClient, setEditedClient] = useState({});
+  const [isAdding, setIsAdding] = useState(false); // State to differentiate between adding and editing
 
-  // ✅ Open the edit dialog
+  // Open the edit dialog
   const handleEditClick = (client) => {
     setEditingClient(client);
     setEditedClient(client);
+    setIsAdding(false);
   };
 
-  // ✅ Update field values in state
+  // Open the add dialog
+  const handleAddClick = () => {
+    setEditingClient({});
+    setEditedClient({});
+    setIsAdding(true);
+  };
+
+  // Update field values in state
   const handleFieldChange = (e) => {
     setEditedClient({ ...editedClient, [e.target.name]: e.target.value });
   };
 
-  // ✅ Save changes to the API
-  const [isSaving, setIsSaving] = useState(false); // ✅ Loading state for saving
+  // Save changes to the API
+  const [isSaving, setIsSaving] = useState(false); // Loading state for saving
 
   const handleSaveChanges = async () => {
-    setIsSaving(true); // ✅ Show loading spinner
+    setIsSaving(true); // Show loading spinner
 
     try {
-      await fetch(`${API_URL}/clients/${editingClient.id}`, {
-        method: "PUT",
+      const method = isAdding ? "POST" : "PUT";
+      const url = isAdding ? `${API_URL}/client` : `${API_URL}/clients/${editingClient.id}`;
+
+      await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -41,13 +52,13 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
       });
 
       setTimeout(() => {
-        fetchClients(); // ✅ Delay refresh for 2 seconds
-        setIsSaving(false); // ✅ Hide spinner
-        setEditingClient(null); // ✅ Close dialog after delay
+        fetchClients(); // Delay refresh for 2 seconds
+        setIsSaving(false); // Hide spinner
+        setEditingClient(null); // Close dialog after delay
       }, 2000);
     } catch (error) {
-      console.error("Error updating client:", error);
-      setIsSaving(false); // ✅ Ensure spinner stops on error
+      console.error("Error saving client:", error);
+      setIsSaving(false); // Ensure spinner stops on error
     }
   };
 
@@ -62,7 +73,7 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
               <TableCell>Address</TableCell>
-              <TableCell>Actions</TableCell> {/* ✅ New Column for Edit Button */}
+              <TableCell>Actions</TableCell> {/* New Column for Edit Button */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -81,7 +92,7 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
                   <TableCell>{client.phone || "N/A"}</TableCell>
                   <TableCell>{client.address || "N/A"}</TableCell>
                   <TableCell>
-                    {/* ✅ Edit Button */}
+                    {/* Edit Button */}
                     <IconButton onClick={() => handleEditClick(client)} color="primary">
                       <Edit />
                     </IconButton>
@@ -93,13 +104,19 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
         </Table>
       </TableContainer>
 
-      <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/add-client">
+      <Button
+        variant="contained"
+        color="secondary"
+        sx={{ mt: 2 }}
+        onClick={handleAddClick}
+        startIcon={<Add />}
+      >
         Add Client
       </Button>
 
-      {/* ✅ Edit Dialog */}
+      {/* Edit/Add Dialog */}
       <Dialog open={!!editingClient} onClose={() => setEditingClient(null)}>
-        <DialogTitle>Edit Client</DialogTitle>
+        <DialogTitle>{isAdding ? "Add Client" : "Edit Client"}</DialogTitle>
         <DialogContent>
           <TextField label="Name" name="name" fullWidth margin="normal"
             value={editedClient.name || ""} onChange={handleFieldChange} />
@@ -118,11 +135,10 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
             onClick={handleSaveChanges} 
             color="primary" 
             variant="contained" 
-            disabled={isSaving} // ✅ Disable while saving
+            disabled={isSaving} // Disable while saving
           >
             {isSaving ? <CircularProgress size={24} color="inherit" /> : "Save"}
           </Button>
-
         </DialogActions>
       </Dialog>
     </>
