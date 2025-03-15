@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -17,6 +17,10 @@ import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 import CreateInvoice from "./components/CreateInvoice";
 import AddClient from "./components/AddClient";
+
+const clearTokenOnLoad = () => {
+  localStorage.removeItem("token");
+};
 
 const Navbar = () => {
   const token = localStorage.getItem("token");
@@ -61,6 +65,10 @@ const Navbar = () => {
 };
 
 const App = () => {
+  useEffect(() => {
+    clearTokenOnLoad();
+  }, []);
+
   return (
     <Router>
       <Navbar />
