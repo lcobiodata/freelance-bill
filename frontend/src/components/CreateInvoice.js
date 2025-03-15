@@ -54,6 +54,7 @@ const CreateInvoice = () => {
 
   const [isAddingClient, setIsAddingClient] = useState(false); // State to open/close Add Client dialog
   const [newClient, setNewClient] = useState({ name: "", business_name: "", email: "", phone: "", address: "" }); // New client state
+  const [isSavingClient, setIsSavingClient] = useState(false); // Loading state for saving client
 
   useEffect(() => {
     fetchClients();
@@ -219,6 +220,8 @@ const CreateInvoice = () => {
 
   // Save new client to the API
   const handleSaveNewClient = async () => {
+    setIsSavingClient(true); // Show loading spinner
+
     try {
       const response = await fetch(`${API_URL}/client`, {
         method: "POST",
@@ -238,10 +241,17 @@ const CreateInvoice = () => {
       const addedClient = await response.json();
       setClients([...clients, addedClient]); // Add new client to the list
       setInvoice({ ...invoice, client_id: addedClient.id }); // Set the new client as selected
-      setIsAddingClient(false); // Close the dialog
-      setNewClient({ name: "", business_name: "", email: "", phone: "", address: "" }); // Reset new client form
+
+      // Wait for 2 seconds before closing the dialog and updating the client list
+      setTimeout(() => {
+        setIsAddingClient(false); // Close the dialog
+        setNewClient({ name: "", business_name: "", email: "", phone: "", address: "" }); // Reset new client form
+        setIsSavingClient(false); // Hide loading spinner
+        fetchClients(); // Refresh the client list
+      }, 2000);
     } catch (error) {
       console.error("Error adding client:", error);
+      setIsSavingClient(false); // Hide loading spinner on error
     }
   };
 
@@ -404,7 +414,9 @@ const CreateInvoice = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsAddingClient(false)} color="secondary">Cancel</Button>
-          <Button onClick={handleSaveNewClient} color="primary" variant="contained">Save</Button>
+          <Button onClick={handleSaveNewClient} color="primary" variant="contained" disabled={isSavingClient}>
+            {isSavingClient ? <CircularProgress size={24} color="inherit" /> : "Save"}
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
