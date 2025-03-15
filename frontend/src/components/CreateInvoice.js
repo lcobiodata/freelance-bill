@@ -153,27 +153,44 @@ const CreateInvoice = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!validateForm()) return;
-
+  
     setIsRedirecting(true);
-
+  
+    // Prepare invoice data without calculations (server handles them)
+    const invoiceData = {
+      client_id: invoice.client_id,
+      issue_date: invoice.issue_date,
+      due_date: invoice.due_date,
+      currency: invoice.currency,
+      tax_rate: Number(invoice.tax_rate), // Ensure it's a number
+      status: invoice.status,
+      payment_method: invoice.payment_method,
+      items: invoice.items.map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        rate: item.rate,
+        discount: item.discount,
+      })),
+    };
+  
     try {
-      // Log the invoice data being submitted
-      console.log("Submitting invoice:", invoice);
-
+      console.log("Submitting invoice:", invoiceData); // Log before sending
+  
       const response = await fetch(`${API_URL}/invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(invoice),
+        body: JSON.stringify(invoiceData),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error creating invoice:", errorData); // Log the error response from the server
+        console.error("Error creating invoice:", errorData);
         throw new Error("Failed to create invoice.");
       }
-
+  
       setMessage(<Alert severity="success">Invoice created successfully!</Alert>);
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {

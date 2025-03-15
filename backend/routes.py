@@ -369,54 +369,50 @@ def get_invoices():
     """ Fetch all invoices for the authenticated user with optimized joins """
     current_user = get_jwt_identity()
 
-    # Get all invoices with joined Clients and aggregated totals
-    invoices = (
-        db.session.query(
-            Invoice.id,
-            Invoice.invoice_number,
-            Client.name.label("client_name"),
-            Invoice.issue_date,
-            Invoice.due_date,
-            Invoice.currency,
-            Invoice.tax,
-            Invoice.status,
-            Invoice.payment_method,
-            Invoice.payment_date,
-            func.sum(InvoiceItem.quantity * InvoiceItem.rate).label("subtotal"),
-            func.sum(InvoiceItem.quantity * InvoiceItem.rate * (InvoiceItem.discount / 100)).label("total_discount"),
-        )
-        .join(User, User.id == Invoice.user_id)
-        .join(Client, Client.id == Invoice.client_id)
-        .outerjoin(InvoiceItem, InvoiceItem.invoice_id == Invoice.id)  # Ensure invoices with no items are included
-        .filter(User.username == current_user)
-        .group_by(Invoice.id, Client.name)  # Aggregate by invoice
-        .all()
-    )
+    # Query all invoices for the user joined with the client
+    invoices = Invoice.query.join(User).filter(User.username == current_user).options(joinedload(Invoice.client)).all()
 
+    # Check due date and update status in the database if overdue
     today = datetime.today().date()
-    invoices_data = []
     for inv in invoices:
         # Determine if the invoice is overdue
-        status = InvoiceStatus.OVERDUE if (inv.due_date < today and inv.status == InvoiceStatus.UNPAID) else inv.status
+        if inv.due_date < today and inv.status == InvoiceStatus.UNPAID:
+            inv.status = InvoiceStatus.OVERDUE
+        
+    # Commit the changes to the database
+    db.session.commit()
 
-        discounted_price = (inv.subtotal or 0) - (inv.total_discount or 0)
-        tax_amount = (inv.tax or 0) * discounted_price / 100
-        total_amount = discounted_price + tax_amount
-
+    # Query again to ensure changes are reflected
+    invoices = Invoice.query.join(User).filter(User.username == current_user).options(joinedload(Invoice.client)).all()
+    
+    # Build the response data
+    invoices_data = []
+    for inv in invoices:
+        items = InvoiceItem.query.filter_by(invoice_id=inv.id).all()
         invoices_data.append({
             "invoice_number": inv.invoice_number,
-            "client": inv.client_name if inv.client_name else "Unknown",
+            "client": inv.client.name if inv.client else "Unknown",
             "issue_date": inv.issue_date.strftime("%Y-%m-%d"),
             "due_date": inv.due_date.strftime("%Y-%m-%d"),
             "currency": inv.currency.name,
-            "tax": inv.tax,
-            "status": status.value,  # Convert enum to string
-            "payment_method": inv.payment_method.value,
+            "tax_rate": inv.tax_rate,
+            "subtotal": inv.subtotal,
+            "total_discount": inv.total_discount,
+            "tax_amount": inv.tax_amount,
+            "total_amount": inv.total_amount,
+            "status": inv.status.value,  # Convert enum to string
+            "payment_method": inv.payment_method.value,  # Convert enum to string
             "payment_date": inv.payment_date.strftime("%Y-%m-%d") if inv.payment_date else None,
-            "subtotal": round(inv.subtotal or 0, 2),
-            "total_discount": round(inv.total_discount or 0, 2),
-            "tax_amount": round(tax_amount, 2),
-            "total_amount": round(total_amount, 2),
+            "items": [{
+                "id": item.id,
+                "description": item.description,
+                "quantity": item.quantity,
+                "unit": item.unit.name,
+                "rate": item.rate,
+                "discount": item.discount,
+                "gross_amount": item.gross_amount,
+                "net_amount": item.net_amount
+            } for item in items]
         })
 
     return jsonify(invoices_data), 200
@@ -425,62 +421,116 @@ def get_invoices():
 @routes_bp.route("/invoice", methods=["POST"])
 @jwt_required()
 def create_invoice():
-    """ Create a new invoice with line items """
+    """Create a new invoice with line items"""
     data = request.get_json()
-    client_id = data.get("client_id")
-    issue_date = datetime.strptime(data.get("issue_date"), "%Y-%m-%d")
-    due_date = datetime.strptime(data.get("due_date"), "%Y-%m-%d")
-    currency_code = data.get("currency").upper()
-    currency = getattr(Currency, currency_code, None)
 
+    # Extract and validate required fields
+    required_fields = ["client_id", "issue_date", "due_date", "currency", "payment_method"]
+    if any(field not in data or not data[field] for field in required_fields):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        issue_date = datetime.strptime(data["issue_date"], "%Y-%m-%d").date()
+        due_date = datetime.strptime(data["due_date"], "%Y-%m-%d").date()
+        if due_date < issue_date:
+            return jsonify({"error": "Due date cannot be before issue date"}), 400
+    except ValueError:
+        return jsonify({"error": "Invalid date format (expected YYYY-MM-DD)"}), 400
+
+    # Validate enums
+    currency_code = data["currency"].upper()
+    currency = getattr(Currency, currency_code, None)
     if not currency:
         return jsonify({"error": f"Invalid currency '{currency_code}'"}), 400
 
-    tax = data.get("tax", 0.0)
-    status = data.get("status", "Unpaid")
-    payment_method = next((pm for pm in PaymentMethod if pm.value == data.get("payment_method")), None)
+    status = data.get("status", "Unpaid").upper()
+    if status not in InvoiceStatus.__members__:
+        return jsonify({"error": f"Invalid status '{status}'"}), 400
+    status_enum = InvoiceStatus[status]
 
+    payment_method_value = data["payment_method"].strip()
+    payment_method = next((pm for pm in PaymentMethod if pm.value == payment_method_value), None)
     if not payment_method:
-        return jsonify({"error": f"Invalid payment method '{data.get('payment_method')}'"}), 400
+        return jsonify({"error": f"Invalid payment method '{payment_method_value}'"}), 400
 
-    items = data.get("items", [])
-
-    # Convert status and payment_method to Enum values
-    status_enum = InvoiceStatus[status.upper()]
-    payment_method_enum = payment_method  # No need to reassign
-
+    # Validate user
     current_user = get_jwt_identity()
-    user_id = User.query.filter_by(username=current_user).first().id
-    last_invoice = Invoice.query.filter_by(user_id=user_id).order_by(Invoice.id.desc()).first()
-    last_invoice_number = int(last_invoice.invoice_number) if last_invoice else 0
-    invoice_number = last_invoice_number + 1
+    user = User.query.filter_by(username=current_user).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
+    # Validate client
+    client = Client.query.get(data["client_id"])
+    if not client:
+        return jsonify({"error": "Client not found"}), 404
+
+    # Generate invoice number
+    last_invoice = Invoice.query.filter_by(user_id=user.id).order_by(Invoice.id.desc()).first()
+    invoice_number = str(int(last_invoice.invoice_number) + 1) if last_invoice else "1"
+
+    # Compute invoice totals
+    items = data.get("items", [])
+    subtotal, total_discount = 0.0, 0.0
+
+    for item in items:
+        try:
+            quantity = float(item["quantity"])
+            rate = float(item["rate"])
+            discount = float(item.get("discount", 0.0))
+        except (ValueError, TypeError):
+            return jsonify({"error": f"Invalid numeric values in items"}), 400
+
+        gross_amount = quantity * rate
+        net_amount = gross_amount * (1 - discount / 100)
+
+        subtotal += gross_amount
+        total_discount += gross_amount * (discount / 100)
+
+    discounted_price = subtotal - total_discount
+    tax_rate = float(data.get("tax_rate", 0.0) or 0.0)
+
+    tax_amount = (tax_rate / 100) * discounted_price
+    total_amount = discounted_price + tax_amount
+
+    # Create Invoice
     invoice = Invoice(
         invoice_number=invoice_number,
-        user_id=user_id,
-        client_id=client_id,
+        user_id=user.id,
+        client_id=client.id,
         issue_date=issue_date,
         due_date=due_date,
         currency=currency,
-        tax=tax,
+        tax_rate=tax_rate,
+        subtotal=subtotal,
+        total_discount=total_discount,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
         status=status_enum,
-        payment_method=payment_method_enum
+        payment_method=payment_method,
+        payment_date=None,
     )
     db.session.add(invoice)
-    db.session.flush()  # Ensure invoice ID is generated before adding items
+    db.session.flush()  # Ensure invoice ID is available before adding items
 
+    # Create Invoice Items
     for item in items:
         unit_key = item.get("unit")
-        if not unit_key or unit_key not in InvoiceUnit.__members__:
+        if unit_key not in InvoiceUnit.__members__:
             return jsonify({"error": f"Invalid or missing unit '{unit_key}'"}), 400
-        unit = InvoiceUnit[unit_key]
+
+        unit_enum = InvoiceUnit[unit_key]
+        gross_amount = float(item["quantity"]) * float(item["rate"])
+        net_amount = gross_amount * (1 - float(item.get("discount", 0.0)) / 100)
+
         invoice_item = InvoiceItem(
             invoice_id=invoice.id,
-            quantity=item.get("quantity"),
-            unit=unit,
-            description=item.get("description"),
-            rate=item.get("rate"),
-            discount=item.get("discount", 0.0)
+            quantity=float(item["quantity"]),
+            unit=unit_enum,
+            description=item["description"],
+            rate=float(item["rate"]),
+            discount=float(item.get("discount", 0.0)),
+            gross_amount=gross_amount,
+            net_amount=net_amount,
         )
         db.session.add(invoice_item)
 
