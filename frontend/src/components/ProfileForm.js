@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { TextField, Button, Box, CircularProgress, Paper, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from "@mui/material";
+import { 
+  TextField, Button, Box, CircularProgress, Paper, Typography, 
+  Dialog, DialogActions, DialogContent, DialogTitle, Grid, Divider 
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 export const ProfileForm = ({ user, loading, updateUser }) => {
   const [formData, setFormData] = useState({
@@ -39,121 +45,38 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
     setIsDialogOpen(false);
   };
 
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-  };
-
   return (
-    <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
-      <Typography variant="h5" gutterBottom>
-        Profile
-      </Typography>
+    <Paper elevation={3} sx={{ p: 4, width: "100%", maxWidth: 500, mx: "auto", borderRadius: 2 }}>
+    <Typography variant="h5" fontWeight="bold" textAlign="center" gutterBottom>
+        Profile Information
+    </Typography>
+    <Divider sx={{ mb: 2 }} />
 
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Full Name:</strong></Typography>
-              <Typography variant="body2">{user.name}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Business Name:</strong></Typography>
-              <Typography variant="body2">{user.business_name}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Email:</strong></Typography>
-              <Typography variant="body2">{user.email}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Phone:</strong></Typography>
-              <Typography variant="body2">{user.phone}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Address:</strong></Typography>
-              <Typography variant="body2">{user.address}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Tax Number:</strong></Typography>
-              <Typography variant="body2">{user.tax_number}</Typography>
-            </Grid>
-          </Grid>
-          <Button variant="contained" onClick={handleOpenDialog}>
-            Edit Profile
-          </Button>
+    <Grid container spacing={2}>
+        {[
+        { label: "Full Name", value: user.name },
+        { label: "Business Name", value: user.business_name },
+        { label: "Email", value: user.email },
+        { label: "Phone", value: user.phone },
+        { label: "Address", value: user.address },
+        { label: "Tax Number", value: user.tax_number },
+        ].map((item, index) => (
+        <Grid item xs={12} sm={6} key={index}>
+            <Typography variant="subtitle2" fontWeight="bold">
+            {item.label}
+            </Typography>
+            <Typography variant="body1" sx={{ color: "text.secondary", wordBreak: "break-word" }}>
+            {item.value || "N/A"}
+            </Typography>
+        </Grid>
+        ))}
+    </Grid>
 
-          <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogContent>
-              <form onSubmit={handleSubmit}>
-                <TextField
-                  label="Full Name"
-                  name="name"
-                  fullWidth
-                  margin="normal"
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Business Name"
-                  name="business_name"
-                  fullWidth
-                  margin="normal"
-                  value={formData.business_name}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Email"
-                  name="email"
-                  type="email"
-                  fullWidth
-                  margin="normal"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled
-                />
-                <TextField
-                  label="Phone"
-                  name="phone"
-                  fullWidth
-                  margin="normal"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Address"
-                  name="address"
-                  fullWidth
-                  margin="normal"
-                  value={formData.address}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Tax Number"
-                  name="tax_number"
-                  fullWidth
-                  margin="normal"
-                  value={formData.tax_number}
-                  onChange={handleChange}
-                />
-                <DialogActions>
-                  <Button onClick={handleCloseDialog} color="secondary" disabled={isSaving}>Cancel</Button>
-                  <Button type="submit" color="primary" variant="contained" disabled={isSaving}>
-                    {isSaving ? <CircularProgress size={24} /> : "Save Changes"}
-                  </Button>
-                </DialogActions>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
+    <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+        <Button variant="contained" startIcon={<EditIcon />} onClick={() => setIsDialogOpen(true)}>
+        Edit Profile
+        </Button>
+    </Box>
     </Paper>
   );
 };
