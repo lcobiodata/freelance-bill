@@ -53,7 +53,7 @@ const CreateInvoice = () => {
   const [isConfirmed, setIsConfirmed] = useState(false); // ✅ Checkbox state
 
   const [isAddingClient, setIsAddingClient] = useState(false); // State to open/close Add Client dialog
-  const [newClient, setNewClient] = useState({ name: "", business_name: "", email: "", phone: "", address: "" }); // New client state
+  const [newClient, setNewClient] = useState({ name: "", business_name: "", email: "", phone: "", address: "", tax_number: "" }); // New client state
   const [isSavingClient, setIsSavingClient] = useState(false); // Loading state for saving client
 
   useEffect(() => {
@@ -245,7 +245,7 @@ const CreateInvoice = () => {
       // Wait for 2 seconds before closing the dialog and updating the client list
       setTimeout(() => {
         setIsAddingClient(false); // Close the dialog
-        setNewClient({ name: "", business_name: "", email: "", phone: "", address: "" }); // Reset new client form
+        setNewClient({ name: "", business_name: "", email: "", phone: "", address: "", tax_number: "" }); // Reset new client form
         setIsSavingClient(false); // Hide loading spinner
         fetchClients(); // Refresh the client list
       }, 2000);
@@ -402,15 +402,17 @@ const CreateInvoice = () => {
         <DialogTitle>Add Client</DialogTitle>
         <DialogContent>
           <TextField label="Name" name="name" fullWidth margin="normal"
-            value={newClient.name} onChange={handleNewClientChange} />
+            value={newClient.name} onChange={handleNewClientChange} required />
           <TextField label="Business Name" name="business_name" fullWidth margin="normal"
             value={newClient.business_name} onChange={handleNewClientChange} />
           <TextField label="Email" name="email" fullWidth margin="normal"
-            value={newClient.email} onChange={handleNewClientChange} />
+            value={newClient.email} onChange={handleNewClientChange} required />
           <TextField label="Phone" name="phone" fullWidth margin="normal"
             value={newClient.phone} onChange={handleNewClientChange} />
           <TextField label="Address" name="address" fullWidth margin="normal"
             value={newClient.address} onChange={handleNewClientChange} />
+          <TextField label="Tax Number" name="tax_number" fullWidth margin="normal"
+            value={newClient.tax_number} onChange={handleNewClientChange} /> {/* Add Tax Number field */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsAddingClient(false)} color="secondary">Cancel</Button>

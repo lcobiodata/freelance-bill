@@ -22,7 +22,8 @@ const AddClient = () => {
     business_name: "",
     email: "",
     phone: "",
-    address: ""
+    address: "",
+    tax_number: "" // Add tax_number to state
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -96,6 +97,7 @@ const AddClient = () => {
             <TextField label="Email" name="email" type="email" fullWidth margin="normal" onChange={handleChange} required />
             <TextField label="Phone" name="phone" fullWidth margin="normal" onChange={handleChange} />
             <TextField label="Address" name="address" fullWidth margin="normal" onChange={handleChange} />
+            <TextField label="Tax Number" name="tax_number" fullWidth margin="normal" onChange={handleChange} /> {/* Add Tax Number field */}
             
             <Button 
               type="submit"

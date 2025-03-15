@@ -5,6 +5,7 @@ import {
   DialogActions, TextField
 } from "@mui/material";
 import { Edit, Add } from "@mui/icons-material";
+import { Link } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -108,7 +109,8 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
         variant="contained"
         color="secondary"
         sx={{ mt: 2 }}
-        onClick={handleAddClick}
+        component={Link} to="/add-client"
+        // onClick={handleAddClick}
         startIcon={<Add />}
       >
         Add Client
@@ -119,15 +121,17 @@ export const ClientsTable = ({ clients, loading, fetchClients }) => {
         <DialogTitle>{isAdding ? "Add Client" : "Edit Client"}</DialogTitle>
         <DialogContent>
           <TextField label="Name" name="name" fullWidth margin="normal"
-            value={editedClient.name || ""} onChange={handleFieldChange} />
+            value={editedClient.name || ""} onChange={handleFieldChange} required />
           <TextField label="Business Name" name="business_name" fullWidth margin="normal"
             value={editedClient.business_name || ""} onChange={handleFieldChange} />
           <TextField label="Email" name="email" fullWidth margin="normal"
-            value={editedClient.email || ""} onChange={handleFieldChange} />
+            value={editedClient.email || ""} onChange={handleFieldChange} required />
           <TextField label="Phone" name="phone" fullWidth margin="normal"
             value={editedClient.phone || ""} onChange={handleFieldChange} />
           <TextField label="Address" name="address" fullWidth margin="normal"
             value={editedClient.address || ""} onChange={handleFieldChange} />
+          <TextField label="Tax Number" name="tax_number" fullWidth margin="normal"
+            value={editedClient.tax_number || ""} onChange={handleFieldChange} /> {/* Add Tax Number field */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditingClient(null)} color="secondary">Cancel</Button>
