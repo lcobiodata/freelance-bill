@@ -31,57 +31,69 @@ class Currency(Enum):
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(256), nullable=True)  # OAuth users have no local password
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=True)  # OAuth users have no local password
     is_verified = db.Column(db.Boolean, default=False)
-    verification_token = db.Column(db.String(100), unique=True, nullable=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
+    verification_token = db.Column(db.String(100), nullable=True)
+    name = db.Column(db.String(100))
+    business_name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200))
     tax_number = db.Column(db.String(50))
-    business_name = db.Column(db.String(100))
+
+    # Relationships
+    clients = db.relationship('Client', backref='user', cascade='all, delete-orphan')
+    invoices = db.relationship('Invoice', back_populates='user', cascade='all, delete-orphan')
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Associate with User
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Associate with User
     name = db.Column(db.String(100))
     business_name = db.Column(db.String(100))
     email = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200))
 
-    user = db.relationship('User', backref='clients')
+    invoices = db.relationship('Invoice', back_populates='client', cascade='all, delete-orphan')
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    invoice_number = db.Column(db.String(50), unique=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
-    issue_date = db.Column(db.Date)
-    due_date = db.Column(db.Date)
-    currency = db.Column(SQLAlchemyEnum(Currency))
-    tax_rate = db.Column(db.Float)
-    subtotal = db.Column(db.Float)
-    total_discount = db.Column(db.Float)
-    tax_amount = db.Column(db.Float)
-    total_amount = db.Column(db.Float)
-    status = db.Column(SQLAlchemyEnum(InvoiceStatus), default=InvoiceStatus.UNPAID)
-    payment_method = db.Column(SQLAlchemyEnum(PaymentMethod))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    invoice_number = db.Column(db.String(50), nullable=False)
+    issue_date = db.Column(db.Date, nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    currency = db.Column(SQLAlchemyEnum(Currency), nullable=False)
+    tax_rate = db.Column(db.Float, nullable=False)
+    subtotal = db.Column(db.Float, nullable=False)
+    total_discount = db.Column(db.Float, nullable=False)
+    tax_amount = db.Column(db.Float, nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
+    status = db.Column(db.Enum(InvoiceStatus), nullable=False)
+    payment_method = db.Column(db.Enum(PaymentMethod), nullable=False)
     payment_date = db.Column(db.Date)
 
-    user = db.relationship('User', backref='invoices')
-    client = db.relationship('Client', backref='invoices')
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'invoice_number', name='unique_user_invoice_number'),
+    )
+
+    # Relationships
+    user = db.relationship('User', back_populates='invoices')
+    client = db.relationship('Client', back_populates='invoices')
+    items = db.relationship('InvoiceItem', back_populates='invoice', cascade='all, delete-orphan')
 
 class InvoiceItem(db.Model):
+    __tablename__ = 'invoice_item'
     id = db.Column(db.Integer, primary_key=True)
-    invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'))
-    quantity = db.Column(db.Float)
-    unit = db.Column(SQLAlchemyEnum(InvoiceUnit))
-    description = db.Column(db.String(200))
-    rate = db.Column(db.Float)
-    discount = db.Column(db.Float, default=0.0)
-    gross_amount = db.Column(db.Float)
-    net_amount = db.Column(db.Float)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'), nullable=False)
+    description = db.Column(db.String(200), nullable=False)
+    quantity = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.Enum(InvoiceUnit), nullable=False)
+    rate = db.Column(db.Float, nullable=False)
+    discount = db.Column(db.Float, nullable=False)
+    gross_amount = db.Column(db.Float, nullable=False)
+    net_amount = db.Column(db.Float, nullable=False)
 
-    invoice = db.relationship('Invoice', backref='items')
+    # Relationships
+    invoice = db.relationship('Invoice', back_populates='items')
