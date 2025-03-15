@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { Link } from "react-router-dom";
+import { Add } from "@mui/icons-material";
 
 export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -85,7 +86,13 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
         </Table>
       </TableContainer>
       
-      <Button variant="contained" color="secondary" sx={{ mt: 2 }} component={Link} to="/create-invoice">
+      <Button 
+        variant="contained" 
+        color="secondary" 
+        sx={{ mt: 2 }} 
+        component={Link} to="/create-invoice"
+        startIcon={<Add />}
+      >
         Create Invoice
       </Button>
 
