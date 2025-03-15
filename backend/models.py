@@ -49,11 +49,12 @@ class User(db.Model):
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Associate with User
-    name = db.Column(db.String(100))
+    name = db.Column(db.String(100), nullable=False)
     business_name = db.Column(db.String(100))
-    email = db.Column(db.String(100))
+    email = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200))
+    tax_number = db.Column(db.String(50))
 
     invoices = db.relationship('Invoice', back_populates='client', cascade='all, delete-orphan')
 
