@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Tabs, Tab, CircularProgress } from "@mui/material";
+import { Typography, Container, Paper } from "@mui/material";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
+import { ProfileForm } from "./ProfileForm"; // Import the new Profile component
 import { DashboardTabs } from "./DashboardTabs";
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -10,14 +11,17 @@ const Dashboard = () => {
   const token = localStorage.getItem("token");
   const [invoices, setInvoices] = useState([]);
   const [clients, setClients] = useState([]);
+  const [user, setUser] = useState(null);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
   const [loadingClients, setLoadingClients] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
     if (token) {
       fetchClients();
       fetchInvoices();
+      fetchUserDetails();
     }
   }, [token]);
 
@@ -49,12 +53,33 @@ const Dashboard = () => {
     setLoadingClients(false);
   };
 
-  const markAsPaid = async (invoiceId) => {
-    await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchInvoices();
+  const fetchUserDetails = async () => {
+    setLoadingUser(true);
+    try {
+      const response = await fetch(`${API_URL}/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      setUser(await response.json());
+    } catch {
+      setUser(null);
+    }
+    setLoadingUser(false);
+  };
+
+  const updateUserDetails = async (updatedData) => {
+    try {
+      const response = await fetch(`${API_URL}/user`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) throw new Error("Failed to update user details");
+      fetchUserDetails(); // Refresh user details after update
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -65,10 +90,10 @@ const Dashboard = () => {
         </Typography>
         {token ? (
           <DashboardTabs tabIndex={tabIndex} setTabIndex={setTabIndex}>
-            <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} />
+            <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />
+            <InvoicesTable invoices={invoices} loading={loadingInvoices} />
             <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />
           </DashboardTabs>
-        
         ) : (
           <Typography variant="body1" color="error">
             You are not logged in. Please <a href="/login">Login</a>.

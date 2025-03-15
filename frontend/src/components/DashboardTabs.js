@@ -11,6 +11,7 @@ export const DashboardTabs = ({ tabIndex, setTabIndex, children }) => {
         onChange={(e, v) => setTabIndex(v)}
         sx={{ borderRight: 1, borderColor: "divider", minWidth: 180 }}
       >
+        <Tab label="Profile" />
         <Tab label="Invoices" />
         <Tab label="Clients" />
       </Tabs>

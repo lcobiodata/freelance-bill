@@ -289,6 +289,57 @@ def update_email():
 
     return jsonify({"message": "Email updated successfully. Please verify your new email."}), 200
 
+# -------------------- Profile Routes --------------------
+@routes_bp.route("/user", methods=["GET"])
+@jwt_required()
+def get_user_details():
+    """ Fetch details of the authenticated user """
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "name": user.name,
+        "business_name": user.business_name,
+        "email": user.email,
+        "phone": user.phone,
+        "address": user.address,
+        "tax_number": user.tax_number,
+        "is_verified": user.is_verified
+    }), 200
+
+@routes_bp.route("/user", methods=["PUT"])
+@jwt_required()
+def update_user_details():
+    """ Update details of the authenticated user """
+    data = request.get_json()
+    name = data.get("name")
+    business_name = data.get("business_name")
+    email = data.get("email")
+    phone = data.get("phone")
+    address = data.get("address")
+    tax_number = data.get("tax_number")
+
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user.name = name
+    user.business_name = business_name
+    user.email = email
+    user.phone = phone
+    user.address = address
+    user.tax_number = tax_number
+
+    db.session.commit()
+    return jsonify({"message": "User details updated successfully"}), 200
+
 # -------------------- Client Routes --------------------
 @routes_bp.route("/clients", methods=["GET"])
 @jwt_required()
