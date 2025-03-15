@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TextField, Button, Box, CircularProgress, Paper, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
 
 export const ProfileForm = ({ user, loading, updateUser }) => {
   const [formData, setFormData] = useState({
@@ -48,9 +49,9 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
-      <Typography variant="h5" gutterBottom>
-        Profile
+    <Paper elevation={4} sx={{ p: 4, width: "100%", maxWidth: 600, mx: "auto" }}>
+      <Typography variant="h5" fontWeight="bold" gutterBottom>
+        Profile Information
       </Typography>
 
       {loading ? (
@@ -60,55 +61,58 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
       ) : (
         <>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Full Name:</strong></Typography>
-              <Typography variant="body2">{user.name}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Business Name:</strong></Typography>
-              <Typography variant="body2">{user.business_name}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Email:</strong></Typography>
-              <Typography variant="body2">{user.email}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Phone:</strong></Typography>
-              <Typography variant="body2">{user.phone}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Address:</strong></Typography>
-              <Typography variant="body2">{user.address}</Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body1"><strong>Tax Number:</strong></Typography>
-              <Typography variant="body2">{user.tax_number}</Typography>
-            </Grid>
+            {[
+              { label: "Full Name", value: user.name },
+              { label: "Business Name", value: user.business_name },
+              { label: "Email", value: user.email },
+              { label: "Phone", value: user.phone },
+              { label: "Address", value: user.address },
+              { label: "Tax Number", value: user.tax_number },
+            ].map(({ label, value }) => (
+              <Grid item xs={12} sm={6} key={label}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {label}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 1.5 }}>
+                  {value || "—"}
+                </Typography>
+              </Grid>
+            ))}
           </Grid>
-          <Button variant="contained" onClick={handleOpenDialog}>
+
+          <Button 
+            variant="contained" 
+            startIcon={<EditIcon />} 
+            onClick={handleOpenDialog} 
+            sx={{ mt: 2 }}
+          >
             Edit Profile
           </Button>
 
-          <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
+          {/* Edit Profile Dialog */}
+          <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
             <DialogTitle>Edit Profile</DialogTitle>
-            <DialogContent>
+            <DialogContent dividers sx={{ p: 3 }}>
               <form onSubmit={handleSubmit}>
-                <TextField
-                  label="Full Name"
-                  name="name"
-                  fullWidth
-                  margin="normal"
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Business Name"
-                  name="business_name"
-                  fullWidth
-                  margin="normal"
-                  value={formData.business_name}
-                  onChange={handleChange}
-                />
+                {[
+                  { label: "Full Name", name: "name" },
+                  { label: "Business Name", name: "business_name" },
+                  { label: "Phone", name: "phone" },
+                  { label: "Address", name: "address" },
+                  { label: "Tax Number", name: "tax_number" },
+                ].map(({ label, name }) => (
+                  <TextField
+                    key={name}
+                    label={label}
+                    name={name}
+                    fullWidth
+                    margin="normal"
+                    value={formData[name]}
+                    onChange={handleChange}
+                    disabled={isSaving}
+                  />
+                ))}
+
                 <TextField
                   label="Email"
                   name="email"
@@ -116,41 +120,24 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
                   fullWidth
                   margin="normal"
                   value={formData.email}
-                  onChange={handleChange}
                   disabled
                 />
-                <TextField
-                  label="Phone"
-                  name="phone"
-                  fullWidth
-                  margin="normal"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Address"
-                  name="address"
-                  fullWidth
-                  margin="normal"
-                  value={formData.address}
-                  onChange={handleChange}
-                />
-                <TextField
-                  label="Tax Number"
-                  name="tax_number"
-                  fullWidth
-                  margin="normal"
-                  value={formData.tax_number}
-                  onChange={handleChange}
-                />
-                <DialogActions>
-                  <Button onClick={handleCloseDialog} color="secondary" disabled={isSaving}>Cancel</Button>
-                  <Button type="submit" color="primary" variant="contained" disabled={isSaving}>
-                    {isSaving ? <CircularProgress size={24} /> : "Save Changes"}
-                  </Button>
-                </DialogActions>
               </form>
             </DialogContent>
+
+            <DialogActions sx={{ p: 3 }}>
+              <Button onClick={handleCloseDialog} variant="outlined" color="secondary" disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                color="primary" 
+                variant="contained" 
+                disabled={isSaving}
+              >
+                {isSaving ? <CircularProgress size={24} /> : "Save Changes"}
+              </Button>
+            </DialogActions>
           </Dialog>
         </>
       )}
