@@ -464,9 +464,13 @@ def create_invoice():
     if not client:
         return jsonify({"error": "Client not found"}), 404
 
-    # Generate invoice number
+    # Generate sequential invoice number for the user
     last_invoice = Invoice.query.filter_by(user_id=user.id).order_by(Invoice.id.desc()).first()
-    invoice_number = str(int(last_invoice.invoice_number) + 1) if last_invoice else "1"
+    if last_invoice:
+        last_invoice_number = int(last_invoice.invoice_number)
+        invoice_number = str(last_invoice_number + 1)
+    else:
+        invoice_number = "1"
 
     # Compute invoice totals
     items = data.get("items", [])
@@ -477,8 +481,8 @@ def create_invoice():
             quantity = float(item["quantity"])
             rate = float(item["rate"])
             discount = float(item.get("discount", 0.0))
-        except (ValueError, TypeError):
-            return jsonify({"error": f"Invalid numeric values in items"}), 400
+        except (ValueError, TypeError) as e:
+            return jsonify({"error": f"Invalid numeric values in items: {item}, error: {str(e)}"}), 400
 
         gross_amount = quantity * rate
         net_amount = gross_amount * (1 - discount / 100)
@@ -487,8 +491,10 @@ def create_invoice():
         total_discount += gross_amount * (discount / 100)
 
     discounted_price = subtotal - total_discount
-    tax_rate = float(data.get("tax_rate", 0.0) or 0.0)
-
+    try:
+        tax_rate = float(data.get("tax_rate", 0.0))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid tax rate"}), 400
     tax_amount = (tax_rate / 100) * discounted_price
     total_amount = discounted_price + tax_amount
 
