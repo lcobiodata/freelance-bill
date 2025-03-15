@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper } from "@mui/material";
+import { Typography, Container, Paper, Box, Grid, Card, CardContent, Tabs, Tab } from "@mui/material";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
 import { ProfileForm } from "./ProfileForm"; // Import the new Profile component
-import { DashboardTabs } from "./DashboardTabs";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -84,21 +83,70 @@ const Dashboard = () => {
 
   return (
     <Container maxWidth="lg">
-      <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
+      <Box sx={{ my: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Dashboard
+          Welcome, {user ? user.name : "User"}!
         </Typography>
-        {token ? (
-          <DashboardTabs tabIndex={tabIndex} setTabIndex={setTabIndex}>
-            <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />
-            <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />
-            <InvoicesTable invoices={invoices} loading={loadingInvoices} />
-          </DashboardTabs>
-        ) : (
-          <Typography variant="body1" color="error">
-            You are not logged in. Please <a href="/login">Login</a>.
-          </Typography>
-        )}
+        <Typography variant="subtitle1" color="textSecondary">
+          Here is your dashboard overview. Manage your clients, invoices, and profile information.
+        </Typography>
+      </Box>
+
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                Total Invoices
+              </Typography>
+              <Typography variant="h4">
+                {invoices.length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                Total Clients
+              </Typography>
+              <Typography variant="h4">
+                {clients.length}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                Profile Status
+              </Typography>
+              <Typography variant="h4">
+                {user && user.is_verified ? "Verified" : "Unverified"}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Tabs
+          value={tabIndex}
+          onChange={(e, newValue) => setTabIndex(newValue)}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+          sx={{ mb: 3 }}
+        >
+          <Tab label="Profile" />
+          <Tab label="Clients" />
+          <Tab label="Invoices" />
+        </Tabs>
+        {tabIndex === 0 && <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />}
+        {tabIndex === 1 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
+        {tabIndex === 2 && <InvoicesTable invoices={invoices} loading={loadingInvoices} />}
       </Paper>
     </Container>
   );
