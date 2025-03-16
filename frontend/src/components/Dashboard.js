@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Grid, Card, CardContent, Tabs, Tab } from "@mui/material";
+import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent } from "@mui/material";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
 import { ProfileForm } from "./ProfileForm"; // Import the new Profile component
+import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
+import TopClientRevenueCard from "./TopClientRevenueCard";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -108,13 +110,23 @@ const Dashboard = () => {
     return invoices.filter(invoice => !invoice.paid).length;
   };
 
-  const findTopClient = () => {
-    const clientInvoices = clients.map(client => ({
-      ...client,
-      invoiceCount: invoices.filter(invoice => invoice.clientId === client.id).length,
-    }));
-    return clientInvoices.sort((a, b) => b.invoiceCount - a.invoiceCount)[0];
+  const findTopClients = () => {
+    const clientStats = clients.map(client => {
+      const clientInvoices = invoices.filter(invoice => invoice.clientId === client.id);
+      return {
+        ...client,
+        invoiceCount: clientInvoices.length,
+        totalRevenue: clientInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.total_amount || 0), 0),
+      };
+    });
+
+    const topLoyaltyClient = clientStats.sort((a, b) => b.invoiceCount - a.invoiceCount)[0] || null;
+    const topRevenueClient = clientStats.sort((a, b) => b.totalRevenue - a.totalRevenue)[0] || null;
+
+    return { topLoyaltyClient, topRevenueClient };
   };
+
+  const { topLoyaltyClient, topRevenueClient } = findTopClients();
 
   return (
     <Container maxWidth="lg">
@@ -176,17 +188,12 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
+        {/* ✅ Place "Top Client" cards within the same Grid layout */}
         <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Top Client
-              </Typography>
-              <Typography variant="h4">
-                {findTopClient() ? findTopClient().name : "N/A"}
-              </Typography>
-            </CardContent>
-          </Card>
+          <TopClientLoyaltyCard client={topLoyaltyClient} />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <TopClientRevenueCard client={topRevenueClient} />
         </Grid>
       </Grid>
 
