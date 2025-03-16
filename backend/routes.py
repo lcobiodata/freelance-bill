@@ -478,6 +478,7 @@ def get_invoices():
 def create_invoice():
     """Create a new invoice with line items"""
     data = request.get_json()
+    print("Received invoice data:", data)  # ✅ Check if type is received
 
     # Extract and validate required fields
     required_fields = ["client_id", "issue_date", "due_date", "currency", "payment_method"]
@@ -576,13 +577,17 @@ def create_invoice():
     # Create Invoice Items
     for item in items:
         type_key = item.get("type")
+        if not type_key:
+            return jsonify({"error": "Item type is required"}), 400
+        type_key = type_key.upper()  # ✅ Convert to match enum keys
         if type_key not in ItemType.__members__:
-            return jsonify({"error": f"Invalid or missing type '{type_key}'"}), 400
+            return jsonify({"error": f"Invalid item type '{type_key}'"}), 400
         type_enum = ItemType[type_key]
 
         unit_key = item.get("unit")
         if unit_key not in ItemUnit.__members__:
             return jsonify({"error": f"Invalid or missing unit '{unit_key}'"}), 400
+        type_key = type_key.upper()  # ✅ Convert to match enum keys
         unit_enum = ItemUnit[unit_key]
 
         gross_amount = float(item["quantity"]) * float(item["rate"])

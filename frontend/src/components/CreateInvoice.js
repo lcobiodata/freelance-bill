@@ -390,8 +390,8 @@ const CreateInvoice = () => {
               error={!!errors.unit}
               helperText={errors.unit}
             >
-              <MenuItem value="ITEM">Item</MenuItem>
-              <MenuItem value="HOUR">Hour</MenuItem>
+              <MenuItem value="Item">Item</MenuItem>
+              <MenuItem value="Hour">Hour</MenuItem>
             </TextField>
             <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
             <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
