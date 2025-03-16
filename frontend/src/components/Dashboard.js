@@ -81,6 +81,38 @@ const Dashboard = () => {
     }
   };
 
+  const markAsPaid = async (invoiceId) => {
+    try {
+      const response = await fetch(`${API_URL}/invoices/${invoiceId}/pay`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Failed to mark invoice as paid");
+      fetchInvoices(); // Refresh invoices after marking as paid
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const calculateTotalRevenue = () => {
+    return invoices.reduce((total, invoice) => {
+      const amount = parseFloat(invoice.total_amount) || 0; // Ensure amount is a number
+      return total + amount;
+    }, 0);
+  };
+
+  const countPendingInvoices = () => {
+    return invoices.filter(invoice => !invoice.paid).length;
+  };
+
+  const findTopClient = () => {
+    const clientInvoices = clients.map(client => ({
+      ...client,
+      invoiceCount: invoices.filter(invoice => invoice.clientId === client.id).length,
+    }));
+    return clientInvoices.sort((a, b) => b.invoiceCount - a.invoiceCount)[0];
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
@@ -121,10 +153,34 @@ const Dashboard = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" color="textSecondary" gutterBottom>
-                Profile Status
+                Total Revenue
               </Typography>
               <Typography variant="h4">
-                {user && user.is_verified ? "Verified" : "Unverified"}
+                ${calculateTotalRevenue().toFixed(2)}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                Pending Invoices
+              </Typography>
+              <Typography variant="h4">
+                {countPendingInvoices()}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                Top Client
+              </Typography>
+              <Typography variant="h4">
+                {findTopClient() ? findTopClient().name : "N/A"}
               </Typography>
             </CardContent>
           </Card>
@@ -146,7 +202,7 @@ const Dashboard = () => {
         </Tabs>
         {tabIndex === 0 && <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />}
         {tabIndex === 1 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
-        {tabIndex === 2 && <InvoicesTable invoices={invoices} loading={loadingInvoices} />}
+        {tabIndex === 2 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} />}
       </Paper>
     </Container>
   );
