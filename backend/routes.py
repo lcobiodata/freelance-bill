@@ -5,7 +5,7 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus, Currency, ItemUnit
+from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus, Currency, ItemType, ItemUnit
 from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
@@ -575,19 +575,25 @@ def create_invoice():
 
     # Create Invoice Items
     for item in items:
+        type_key = item.get("type")
+        if type_key not in ItemType.__members__:
+            return jsonify({"error": f"Invalid or missing type '{type_key}'"}), 400
+        type_enum = ItemType[type_key]
+
         unit_key = item.get("unit")
         if unit_key not in ItemUnit.__members__:
             return jsonify({"error": f"Invalid or missing unit '{unit_key}'"}), 400
-
         unit_enum = ItemUnit[unit_key]
+
         gross_amount = float(item["quantity"]) * float(item["rate"])
         net_amount = gross_amount * (1 - float(item.get("discount", 0.0)) / 100)
 
         invoice_item = InvoiceItem(
             invoice_id=invoice.id,
+            type=type_enum,
+            description=item["description"],
             quantity=float(item["quantity"]),
             unit=unit_enum,
-            description=item["description"],
             rate=float(item["rate"]),
             discount=float(item.get("discount", 0.0)),
             gross_amount=gross_amount,
@@ -630,6 +636,7 @@ def get_invoice(invoice_id):
         "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None,
         "items": [{
             "id": item.id,
+            "type": item.type.name,
             "description": item.description,
             "quantity": item.quantity,
             "unit": item.unit.name,
