@@ -585,9 +585,11 @@ def create_invoice():
         type_enum = ItemType[type_key]
 
         unit_key = item.get("unit")
+        if not unit_key:
+            return jsonify({"error": "Item unit is required"}), 400
+        unit_key = unit_key.upper()  # ✅ Convert to match enum keys
         if unit_key not in ItemUnit.__members__:
             return jsonify({"error": f"Invalid or missing unit '{unit_key}'"}), 400
-        type_key = type_key.upper()  # ✅ Convert to match enum keys
         unit_enum = ItemUnit[unit_key]
 
         gross_amount = float(item["quantity"]) * float(item["rate"])

@@ -122,11 +122,11 @@ const CreateInvoice = () => {
 
     if (editIndex !== null) {
       // ✅ **Editing an existing item**
-      updatedItems[editIndex] = { ...newItem, grossAmount, netAmount, unit: unit.toUpperCase() };
+      updatedItems[editIndex] = { ...newItem, grossAmount, netAmount, unit: unit };
       setEditIndex(null); // Reset edit mode
     } else {
       // ✅ **Adding a new item**
-      updatedItems.push({ ...newItem, type, grossAmount, netAmount, unit: unit.toUpperCase() });
+      updatedItems.push({ ...newItem, type, grossAmount, netAmount, unit: unit });
     }
 
     setInvoice({ ...invoice, items: updatedItems });
