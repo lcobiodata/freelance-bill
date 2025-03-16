@@ -5,7 +5,7 @@ import secrets
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus, Currency, InvoiceUnit
+from models import db, User, Client, Invoice, InvoiceItem, PaymentMethod, InvoiceStatus, Currency, ItemUnit
 from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
@@ -576,10 +576,10 @@ def create_invoice():
     # Create Invoice Items
     for item in items:
         unit_key = item.get("unit")
-        if unit_key not in InvoiceUnit.__members__:
+        if unit_key not in ItemUnit.__members__:
             return jsonify({"error": f"Invalid or missing unit '{unit_key}'"}), 400
 
-        unit_enum = InvoiceUnit[unit_key]
+        unit_enum = ItemUnit[unit_key]
         gross_amount = float(item["quantity"]) * float(item["rate"])
         net_amount = gross_amount * (1 - float(item.get("discount", 0.0)) / 100)
 
@@ -651,7 +651,7 @@ def add_invoice_item(invoice_id):
         invoice_id=invoice_id,
         description=data.get("description"),
         quantity=float(data.get("quantity")),
-        unit=InvoiceUnit[data.get("unit")],
+        unit=ItemUnit[data.get("unit")],
         rate=float(data.get("rate")),
         discount=float(data.get("discount", 0.0))
     )

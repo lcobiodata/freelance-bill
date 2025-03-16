@@ -11,10 +11,6 @@ class InvoiceStatus(Enum):
     OVERDUE = 'Overdue'
     CANCELLED = 'Cancelled'
 
-class InvoiceUnit(Enum):
-    HOUR = 'Hour'
-    ITEM = 'Item'
-
 class PaymentMethod(Enum):
     CASH = 'Cash'
     BANK_TRANSFER = 'Bank Transfer'
@@ -26,6 +22,14 @@ class Currency(Enum):
     EUR = "EUR"
     GBP = "GBP"
     # Add more currencies as needed
+
+class ItemType(Enum):
+    SERVICE = 'Service'
+    PRODUCT = 'Product'
+
+class ItemUnit(Enum):
+    HOUR = 'Hour'
+    ITEM = 'Item'
 
 # ----------------- Models -----------------
 
@@ -88,9 +92,10 @@ class InvoiceItem(db.Model):
     __tablename__ = 'invoice_item'
     id = db.Column(db.Integer, primary_key=True)
     invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'), nullable=False)
+    item_type = db.Column(db.Enum(ItemType), nullable=False)
     description = db.Column(db.String(200), nullable=False)
     quantity = db.Column(db.Float, nullable=False)
-    unit = db.Column(db.Enum(InvoiceUnit), nullable=False)
+    unit = db.Column(db.Enum(ItemUnit), nullable=False)
     rate = db.Column(db.Float, nullable=False)
     discount = db.Column(db.Float, nullable=False)
     gross_amount = db.Column(db.Float, nullable=False)
