@@ -199,9 +199,27 @@ const Dashboard = () => {
           variant="fullWidth"
           sx={{ mb: 3 }}
         >
-          <Tab label="Profile" />
-          <Tab label="Clients" />
-          <Tab label="Invoices" />
+          <Tab 
+            label="Profile" 
+            sx={{ 
+              fontWeight: tabIndex === 0 ? 'bold' : 'normal', 
+              color: tabIndex === 0 ? 'primary.main' : 'text.secondary' 
+            }} 
+          />
+          <Tab 
+            label="Clients" 
+            sx={{ 
+              fontWeight: tabIndex === 1 ? 'bold' : 'normal', 
+              color: tabIndex === 1 ? 'primary.main' : 'text.secondary' 
+            }} 
+          />
+          <Tab 
+            label="Invoices" 
+            sx={{ 
+              fontWeight: tabIndex === 2 ? 'bold' : 'normal', 
+              color: tabIndex === 2 ? 'primary.main' : 'text.secondary' 
+            }} 
+          />
         </Tabs>
         {tabIndex === 0 && <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />}
         {tabIndex === 1 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
