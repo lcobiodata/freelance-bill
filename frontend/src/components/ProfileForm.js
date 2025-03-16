@@ -50,10 +50,6 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
 
   return (
     <Paper elevation={4} sx={{ p: 4, width: "100%", maxWidth: 600, mx: "auto" }}>
-      {/* <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Profile Information
-      </Typography> */}
-
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
           <CircularProgress />
@@ -82,6 +78,7 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
 
           <Button 
             variant="contained" 
+            color="secondary" 
             startIcon={<EditIcon />} 
             onClick={handleOpenDialog} 
             sx={{ mt: 2 }}
