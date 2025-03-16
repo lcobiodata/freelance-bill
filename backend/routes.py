@@ -656,6 +656,7 @@ def add_invoice_item(invoice_id):
     data = request.get_json()
     invoice_item = InvoiceItem(
         invoice_id=invoice_id,
+        type=ItemType[data.get("type")],
         description=data.get("description"),
         quantity=float(data.get("quantity")),
         unit=ItemUnit[data.get("unit")],
