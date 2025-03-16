@@ -83,7 +83,7 @@ const Dashboard = () => {
 
   const markAsPaid = async (invoiceId) => {
     try {
-      const response = await fetch(`${API_URL}/invoices/${invoiceId}/pay`, {
+      const response = await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
