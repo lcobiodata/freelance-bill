@@ -34,10 +34,11 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
 
   const handleConfirmMarkAsPaid = () => {
     if (selectedInvoice) {
-      markAsPaid(selectedInvoice);
+      markAsPaid(selectedInvoice); //  Now correctly passing invoice ID
     }
     handleCloseDialog();
   };
+  
 
   return (
     <>
@@ -73,7 +74,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
                       <Button
                         variant="contained"
                         color="primary"
-                        onClick={() => handleOpenDialog(invoice.invoice_number)}
+                        onClick={() => handleOpenDialog(invoice.id)} // ✅ Use invoice.id instead of invoice_number
                       >
                         Mark as Paid
                       </Button>

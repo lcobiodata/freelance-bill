@@ -82,15 +82,18 @@ const Dashboard = () => {
   };
 
   const markAsPaid = async (invoiceId) => {
+    console.log("Marking invoice as paid:", invoiceId);
     try {
-      const response = await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, {
+      const response = await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, { // API expects invoice ID
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+  
       if (!response.ok) throw new Error("Failed to mark invoice as paid");
+  
       fetchInvoices(); // Refresh invoices after marking as paid
     } catch (error) {
-      console.error(error);
+      console.error("Error marking invoice as paid:", error);
     }
   };
 
