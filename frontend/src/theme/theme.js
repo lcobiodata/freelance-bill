@@ -2,13 +2,13 @@ import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#0A84C1" },   // Adjusted blue from the logo
-    secondary: { main: "#2E4A62" }, // Darker blue-gray for contrast
-    background: { default: "#F4F7FA" }, // Light grayish-blue for a clean look
-    success: { main: "#30A14E" },  // Softer green for positive actions
-    error: { main: "#E63946" },  // Slightly muted red for errors
-    warning: { main: "#E7A218" }, // Warm yellow-orange for warnings
-    info: { main: "#1E88E5" },  // Refined blue for informational messages
+    primary: { main: "#003b46" },   // Dark petrol blue for primary actions
+    secondary: { main: "#07575b" }, // Slightly lighter petrol blue for secondary actions
+    background: { default: "#c4dfe6" }, // Light petrol blue background for a clean look
+    success: { main: "#4caf50" },  // Green for success messages
+    error: { main: "#f44336" },  // Red for errors
+    warning: { main: "#ff9800" }, // Orange for warnings
+    info: { main: "#2196f3" },  // Blue for informational messages
   },
   typography: {
     fontFamily: "Inter, sans-serif",  // A modern, clean font
