@@ -595,7 +595,7 @@ def create_invoice():
 
         invoice_item = InvoiceItem(
             invoice_id=invoice.id,
-            type=type_enum,
+            item_type=type_enum,
             description=item["description"],
             quantity=float(item["quantity"]),
             unit=unit_enum,
@@ -641,7 +641,7 @@ def get_invoice(invoice_id):
         "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None,
         "items": [{
             "id": item.id,
-            "type": item.type.name,
+            "type": item.item_type.name,
             "description": item.description,
             "quantity": item.quantity,
             "unit": item.unit.name,
@@ -661,7 +661,7 @@ def add_invoice_item(invoice_id):
     data = request.get_json()
     invoice_item = InvoiceItem(
         invoice_id=invoice_id,
-        type=ItemType[data.get("type")],
+        item_type=ItemType[data.get("type")],
         description=data.get("description"),
         quantity=float(data.get("quantity")),
         unit=ItemUnit[data.get("unit")],
