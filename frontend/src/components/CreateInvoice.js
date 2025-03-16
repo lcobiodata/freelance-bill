@@ -45,7 +45,7 @@ const CreateInvoice = () => {
     items: []
   });
 
-  const [newItem, setNewItem] = useState({ description: "", quantity: "", rate: "", discount: 0, unit: "" }); // Default discount
+  const [newItem, setNewItem] = useState({ type: "", description: "", quantity: "", rate: "", discount: 0, unit: "" }); // Default discount
   const [editIndex, setEditIndex] = useState(null); // Track editing index
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -96,13 +96,14 @@ const CreateInvoice = () => {
     const updatedItem = { ...newItem, [name]: value };
     setNewItem(updatedItem);
     setErrors((prev) => ({ ...prev, [name]: "" }));
-  };
+  };  
 
   // ✅ **Add or Edit Item**
   const saveItem = () => {
-    const { description, quantity, rate, discount, unit } = newItem;
+    const { type, description, quantity, rate, discount, unit } = newItem;
     const newErrors = {};
 
+    if (!type) newErrors.type = "Type is required."; // Add validation for type
     if (!description.trim()) newErrors.description = "Description is required.";
     if (!quantity.trim()) newErrors.quantity = "Quantity is required.";
     if (!rate.trim()) newErrors.rate = "Rate is required.";
@@ -125,7 +126,7 @@ const CreateInvoice = () => {
       setEditIndex(null); // Reset edit mode
     } else {
       // ✅ **Adding a new item**
-      updatedItems.push({ ...newItem, grossAmount, netAmount, unit: unit.toUpperCase() });
+      updatedItems.push({ ...newItem, type, grossAmount, netAmount, unit: unit.toUpperCase() });
     }
 
     setInvoice({ ...invoice, items: updatedItems });
@@ -181,6 +182,7 @@ const CreateInvoice = () => {
       status: invoice.status,
       payment_method: invoice.payment_method,
       items: invoice.items.map((item) => ({
+        type: item.type,
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,
@@ -327,6 +329,7 @@ const CreateInvoice = () => {
               <Table>
                 <TableHead>
                   <TableRow>
+                    <TableCell>Type</TableCell>
                     <TableCell>Quantity</TableCell>
                     <TableCell>Unit</TableCell>
                     <TableCell>Description</TableCell>
@@ -340,6 +343,7 @@ const CreateInvoice = () => {
                 <TableBody>
                   {invoice.items.map((item, index) => (
                     <TableRow key={index}>
+                      <TableCell>{item.type}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{item.unit}</TableCell>
                       <TableCell>{item.description}</TableCell>
@@ -360,7 +364,20 @@ const CreateInvoice = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-
+            <TextField
+              select
+              label="Type *"
+              name="type"
+              fullWidth
+              margin="normal"
+              value={newItem.type}
+              onChange={handleItemChange}
+              error={!!errors.type}
+              helperText={errors.type}
+            >
+              <MenuItem value="Product">Product</MenuItem>
+              <MenuItem value="Service">Service</MenuItem>
+            </TextField>
             <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
             <TextField
               select
