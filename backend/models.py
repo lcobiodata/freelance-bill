@@ -13,9 +13,15 @@ class InvoiceStatus(Enum):
 
 class PaymentMethod(Enum):
     CASH = 'Cash'
+    CHECK = 'Check'
     BANK_TRANSFER = 'Bank Transfer'
     CREDIT_CARD = 'Credit Card'
+    DEBIT_CARD = 'Debit Card'
+    DIRECT_DEBIT = 'Direct Debit'
     PAYPAL = 'PayPal'
+    STRIPE = 'Stripe'
+    BARTER_TRADE = 'Barter Trade'
+    OTHER = 'Other'
 
 class Currency(Enum):
     USD = "USD"
