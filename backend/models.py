@@ -83,6 +83,7 @@ class Invoice(db.Model):
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.Enum(InvoiceStatus), nullable=False)
     payment_method = db.Column(db.Enum(PaymentMethod), nullable=False)
+    payment_details = db.Column(db.String(200), nullable=False)
     payment_date = db.Column(db.Date)
 
     __table_args__ = (

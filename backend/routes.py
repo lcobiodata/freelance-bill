@@ -457,12 +457,14 @@ def get_invoices():
             "total_amount": inv.total_amount,
             "status": inv.status.value,  # Convert enum to string
             "payment_method": inv.payment_method.value,  # Convert enum to string
+            "payment_details": inv.payment_details,
             "payment_date": inv.payment_date.strftime("%Y-%m-%d") if inv.payment_date else None,
             "items": [{
                 "id": item.id,
+                "type": item.item_type.value,
                 "description": item.description,
                 "quantity": item.quantity,
-                "unit": item.unit.name,
+                "unit": item.unit.value,
                 "rate": item.rate,
                 "discount": item.discount,
                 "gross_amount": item.gross_amount,
@@ -481,7 +483,16 @@ def create_invoice():
     print("Received invoice data:", data)  # ✅ Check if type is received
 
     # Extract and validate required fields
-    required_fields = ["client_id", "issue_date", "due_date", "currency", "payment_method"]
+    required_fields = [
+        "client_id", 
+        "issue_date", 
+        "due_date", 
+        "currency", 
+        "tax_rate", 
+        "payment_method", 
+        "payment_details", 
+        "items",
+    ]
     if any(field not in data or not data[field] for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
@@ -504,14 +515,14 @@ def create_invoice():
         return jsonify({"error": f"Invalid status '{status}'"}), 400
     status_enum = InvoiceStatus[status]
 
-    
-    payment_method = data.get("payment_method")
+    payment_method_value = data["payment_method"].strip().replace(" ", "_").upper()
+    payment_method = PaymentMethod.__members__.get(payment_method_value, None)
     if not payment_method:
-        return jsonify({"error": "Payment method is required"}), 400
-    payment_method = payment_method.upper().replace(" ", "_")  # ✅ Convert to match enum keys
-    if payment_method not in PaymentMethod.__members__:
-        return jsonify({"error": f"Invalid payment method '{payment_method}'"}), 400
-    payment_method_enum = PaymentMethod[payment_method]
+        return jsonify({"error": f"Invalid payment method '{data['payment_method']}'"}), 400
+
+    payment_details = data.get("payment_details")
+    if not payment_details:
+        return jsonify({"error": "Payment details are required"}), 400
 
     # Validate user
     current_user = get_jwt_identity()
@@ -573,6 +584,7 @@ def create_invoice():
         total_amount=total_amount,
         status=status_enum,
         payment_method=payment_method,
+        payment_details=payment_details,
         payment_date=None,
     )
     db.session.add(invoice)
@@ -644,7 +656,12 @@ def get_invoice(invoice_id):
         "tax_rate": invoice.tax_rate,
         "status": invoice.status.value,  # Convert enum to string
         "payment_method": invoice.payment_method.value,  # Convert enum to string
+        "payment_details": invoice.payment_details,
         "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None,
+        "subtotal": invoice.subtotal,
+        "total_discount": invoice.total_discount,
+        "tax_amount": invoice.tax_amount,
+        "total_amount": invoice.total_amount,
         "items": [{
             "id": item.id,
             "type": item.item_type.value,  # Convert enum to string
@@ -652,7 +669,9 @@ def get_invoice(invoice_id):
             "quantity": item.quantity,
             "unit": item.unit.value,  # Convert enum to string
             "rate": item.rate,
-            "discount": item.discount
+            "discount": item.discount,
+            "gross_amount": item.gross_amount,
+            "net_amount": item.net_amount
         } for item in items]
     }), 200
 

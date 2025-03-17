@@ -36,6 +36,7 @@ const CreateInvoice = () => {
     tax_rate: 0,
     status: "Unpaid",
     payment_method: "",
+    payment_details: "", // Add payment_details field
     items: [],
   });
 
@@ -205,6 +206,19 @@ const CreateInvoice = () => {
               <MenuItem value="Barter Trade">Barter Trade</MenuItem>
               <MenuItem value="Other">Other</MenuItem>
             </TextField>
+
+            <TextField
+              label="Payment Details *"
+              name="payment_details"
+              fullWidth
+              margin="normal"
+              value={invoice.payment_details}
+              onChange={handleChange}
+              error={!!errors.payment_details}
+              helperText={errors.payment_details}
+              multiline
+              rows={4}
+            />
 
             <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
 
