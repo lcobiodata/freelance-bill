@@ -652,39 +652,39 @@ def get_invoice(invoice_id):
         } for item in items]
     }), 200
 
-@routes_bp.route("/invoice/<int:invoice_id>/items", methods=["POST"])
-@jwt_required()
-def add_invoice_item(invoice_id):
-    """ Add an item to an existing invoice """
-    invoice = Invoice.query.get(invoice_id)
-    if not invoice:
-        return jsonify({"message": "Invoice not found"}), 404
+# @routes_bp.route("/invoice/<int:invoice_id>/items", methods=["POST"])
+# @jwt_required()
+# def add_invoice_item(invoice_id):
+#     """ Add an item to an existing invoice """
+#     invoice = Invoice.query.get(invoice_id)
+#     if not invoice:
+#         return jsonify({"message": "Invoice not found"}), 404
 
-    data = request.get_json()
-    invoice_item = InvoiceItem(
-        invoice_id=invoice_id,
-        item_type=ItemType[data.get("type")],
-        description=data.get("description"),
-        quantity=float(data.get("quantity")),
-        unit=ItemUnit[data.get("unit")],
-        rate=float(data.get("rate")),
-        discount=float(data.get("discount", 0.0))
-    )
+#     data = request.get_json()
+#     invoice_item = InvoiceItem(
+#         invoice_id=invoice_id,
+#         item_type=ItemType[data.get("type")],
+#         description=data.get("description"),
+#         quantity=float(data.get("quantity")),
+#         unit=ItemUnit[data.get("unit")],
+#         rate=float(data.get("rate")),
+#         discount=float(data.get("discount", 0.0))
+#     )
 
-    db.session.add(invoice_item)
-    db.session.commit()
-    return jsonify({"message": "Item added successfully"}), 201
+#     db.session.add(invoice_item)
+#     db.session.commit()
+#     return jsonify({"message": "Item added successfully"}), 201
 
-@routes_bp.route("/invoice/item/<int:item_id>", methods=["DELETE"])
-@jwt_required()
-def delete_invoice_item(item_id):
-    """ Delete an invoice item """
-    item = InvoiceItem.query.get(item_id)
-    if not item:
-        return jsonify({"message": "Item not found"}), 404
-    db.session.delete(item)
-    db.session.commit()
-    return jsonify({"message": "Item deleted successfully"}), 200
+# @routes_bp.route("/invoice/item/<int:item_id>", methods=["DELETE"])
+# @jwt_required()
+# def delete_invoice_item(item_id):
+#     """ Delete an invoice item """
+#     item = InvoiceItem.query.get(item_id)
+#     if not item:
+#         return jsonify({"message": "Item not found"}), 404
+#     db.session.delete(item)
+#     db.session.commit()
+#     return jsonify({"message": "Item deleted successfully"}), 200
 
 # -------------------- Payment Tracking --------------------
 @routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])
