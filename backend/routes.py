@@ -493,7 +493,7 @@ def create_invoice():
         "payment_details", 
         "items",
     ]
-    if any(field not in data or not data[field] for field in required_fields):
+    if any(field not in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
     try:

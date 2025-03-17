@@ -82,24 +82,39 @@ const CreateInvoice = () => {
 
   const saveItem = () => {
     if (!newItem.type || !newItem.description || !newItem.quantity || !newItem.rate) {
-      setErrors((prev) => ({ ...prev, type: "Type is required.", description: "Description is required." }));
+      setErrors((prev) => ({ 
+        ...prev, 
+        type: "Type is required.", 
+        description: "Description is required."
+      }));
       return;
     }
-
+  
     const grossAmount = parseFloat(newItem.quantity) * parseFloat(newItem.rate);
     const netAmount = grossAmount * (1 - parseFloat(newItem.discount) / 100);
     const updatedItems = [...invoice.items];
-
+  
     if (editIndex !== null) {
       updatedItems[editIndex] = { ...newItem, grossAmount, netAmount };
       setEditIndex(null);
     } else {
       updatedItems.push({ ...newItem, grossAmount, netAmount });
     }
-
+  
     setInvoice((prev) => ({ ...prev, items: updatedItems }));
+  
+    // ✅ Clear the "items" error and the global message if an item is added
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.items; // ✅ Removes the "items" validation error
+      return newErrors;
+    });
+  
+    setMessage(null); // ✅ Remove any global message (including the "Please add at least one item before submitting.")
+  
     setNewItem({ type: "", description: "", quantity: "", rate: "", discount: 0, unit: "" });
   };
+  
 
   const editItem = (index) => {
     setNewItem(invoice.items[index]);
@@ -131,19 +146,22 @@ const CreateInvoice = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateFields()) return;
-
+    if (!validateFields()) {
+      setMessage(<Alert severity="error">Please add at least one item before submitting.</Alert>); // ✅ Display message if no items
+      return;
+    }
+  
     setIsRedirecting(true);
-
+  
     try {
       const response = await fetch(`${API_URL}/invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(invoice),
       });
-
+  
       if (!response.ok) throw new Error("Failed to create invoice");
-
+  
       setMessage(<Alert severity="success">Invoice created successfully!</Alert>);
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
@@ -151,6 +169,7 @@ const CreateInvoice = () => {
       setIsRedirecting(false);
     }
   };
+  
 
   const handleSaveNewClient = async () => {
     setIsSavingClient(true);
@@ -245,6 +264,7 @@ const CreateInvoice = () => {
 
             {/* ✅ Invoice Items Table */}
             <InvoiceItemsTable invoice={invoice} editItem={editItem} deleteItem={deleteItem} />
+            {errors.items && <Alert severity="error" sx={{ my: 2 }}>{errors.items}</Alert>} {/* ✅ Show error if no items added */}
 
             {/* ✅ Invoice Item Form */}
             <InvoiceItemForm newItem={newItem} handleItemChange={handleItemChange} errors={errors} saveItem={saveItem} editIndex={editIndex} />

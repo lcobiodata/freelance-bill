@@ -1,7 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import { TextField, Button, Box, MenuItem } from "@mui/material";
 
 const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editIndex }) => {
+  const [localErrors, setLocalErrors] = useState(errors);
+
+  const checkMandatoryFields = () => {
+    const mandatoryFields = ["type", "quantity", "unit", "description", "rate"];
+    const newErrors = {};
+    mandatoryFields.forEach(field => {
+      if (!newItem[field]) {
+        newErrors[field] = "This field is required";
+      }
+    });
+    return newErrors;
+  };
+
+  const handleSaveItem = () => {
+    const newErrors = checkMandatoryFields();
+    
+    if (Object.keys(newErrors).length > 0) {
+      setLocalErrors(newErrors);
+    } else {
+      saveItem();
+      setLocalErrors({}); // ✅ Clear errors when at least one item is added
+    }
+  };
+
   return (
     <>
       <TextField
@@ -12,8 +36,8 @@ const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editInde
         margin="normal"
         value={newItem.type || ""}
         onChange={handleItemChange}
-        error={!!errors.type}
-        helperText={errors.type}
+        error={!!localErrors.type}
+        helperText={localErrors.type}
       >
         <MenuItem value="Product">Product</MenuItem>
         <MenuItem value="Service">Service</MenuItem>
@@ -27,8 +51,8 @@ const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editInde
         margin="normal"
         value={newItem.quantity || ""}
         onChange={handleItemChange}
-        error={!!errors.quantity}
-        helperText={errors.quantity}
+        error={!!localErrors.quantity}
+        helperText={localErrors.quantity}
       />
 
       <TextField
@@ -39,8 +63,8 @@ const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editInde
         margin="normal"
         value={newItem.unit || ""}
         onChange={handleItemChange}
-        error={!!errors.unit}
-        helperText={errors.unit}
+        error={!!localErrors.unit}
+        helperText={localErrors.unit}
       >
         <MenuItem value="Item">Item</MenuItem>
         <MenuItem value="Hour">Hour</MenuItem>
@@ -53,8 +77,8 @@ const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editInde
         margin="normal"
         value={newItem.description || ""}
         onChange={handleItemChange}
-        error={!!errors.description}
-        helperText={errors.description}
+        error={!!localErrors.description}
+        helperText={localErrors.description}
       />
 
       <TextField
@@ -65,8 +89,8 @@ const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editInde
         margin="normal"
         value={newItem.rate || ""}
         onChange={handleItemChange}
-        error={!!errors.rate}
-        helperText={errors.rate}
+        error={!!localErrors.rate}
+        helperText={localErrors.rate}
       />
 
       <TextField
@@ -78,12 +102,12 @@ const InvoiceItemForm = ({ newItem, handleItemChange, errors, saveItem, editInde
         value={newItem.discount || ""}
         onChange={handleItemChange}
         inputProps={{ min: 0, max: 100 }}
-        error={!!errors.discount}
-        helperText={errors.discount}
+        error={!!localErrors.discount}
+        helperText={localErrors.discount}
       />
 
       <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
-        <Button variant="contained" color="primary" onClick={saveItem}>
+        <Button variant="contained" color="primary" onClick={handleSaveItem}>
           {editIndex !== null ? "Update Item" : "Add Item"}
         </Button>
       </Box>
