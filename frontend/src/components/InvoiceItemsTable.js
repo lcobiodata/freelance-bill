@@ -12,7 +12,7 @@ const InvoiceItemsTable = ({ invoice, editItem, deleteItem }) => {
             <TableCell>Quantity</TableCell>
             <TableCell>Unit</TableCell>
             <TableCell>Description</TableCell>
-            <TableCell>Rate</TableCell>
+            <TableCell>Price/Rate</TableCell>
             <TableCell>Discount (%)</TableCell>
             <TableCell>Gross</TableCell>
             <TableCell>Net</TableCell>
