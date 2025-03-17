@@ -38,12 +38,14 @@ const CreateInvoice = () => {
     client_id: "",
     issue_date: "",
     due_date: "",
-    currency: "USD", // Default currency
-    tax_rate: 0, // Default tax rate
+    currency: "USD",
+    tax_rate: 0,
     status: "Unpaid",
     payment_method: "",
+    payment_details: "",
     items: []
   });
+  
 
   const [newItem, setNewItem] = useState({ type: "", description: "", quantity: "", rate: "", discount: 0, unit: "" }); // Default discount
   const [editIndex, setEditIndex] = useState(null); // Track editing index
@@ -106,7 +108,7 @@ const CreateInvoice = () => {
     if (!type) newErrors.type = "Type is required."; // Add validation for type
     if (!description.trim()) newErrors.description = "Description is required.";
     if (!quantity.trim()) newErrors.quantity = "Quantity is required.";
-    if (!rate.trim()) newErrors.rate = "Rate is required.";
+    if (!rate.trim()) newErrors.rate = "Price/Rate is required.";
     if (discount < 0 || discount > 100) newErrors.discount = "Discount must be between 0 and 100.";
     if (!unit.trim()) newErrors.unit = "Unit is required.";
 
@@ -152,6 +154,7 @@ const CreateInvoice = () => {
   // Validate before submission
   const validateForm = () => {
     const newErrors = {};
+    
     if (!invoice.client_id) newErrors.client_id = "Client selection is required.";
     if (!invoice.issue_date) newErrors.issue_date = "Issue date is required.";
     if (!invoice.due_date) newErrors.due_date = "Due date is required.";
@@ -159,12 +162,17 @@ const CreateInvoice = () => {
       newErrors.due_date = "Due date must be later than the issue date.";
     }
     if (!invoice.payment_method) newErrors.payment_method = "Payment method is required.";
-    if (invoice.items.length === 0) newErrors.items = "At least one item is required.";
-
+    if (!invoice.payment_details.trim()) newErrors.payment_details = "Payment details are required."; // ✅ Add this
+    if (invoice.items.length === 0) {
+      newErrors.items = "At least one item is required.";
+    } else {
+      delete newErrors.items; // ✅ Remove error when items exist
+    }
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -178,9 +186,10 @@ const CreateInvoice = () => {
       issue_date: invoice.issue_date,
       due_date: invoice.due_date,
       currency: invoice.currency,
-      tax_rate: Number(invoice.tax_rate), // Ensure it's a number
+      tax_rate: Number(invoice.tax_rate),
       status: invoice.status,
       payment_method: invoice.payment_method,
+      payment_details: invoice.payment_details,
       items: invoice.items.map((item) => ({
         type: item.type,
         description: item.description,
@@ -320,7 +329,18 @@ const CreateInvoice = () => {
               <MenuItem value="PayPal">PayPal</MenuItem>
               <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
             </TextField>
-
+            <TextField
+              label="Payment Details *"
+              name="payment_details"
+              fullWidth
+              margin="normal"
+              value={invoice.payment_details}
+              onChange={handleChange}
+              error={!!errors.payment_details}
+              helperText={errors.payment_details}
+              multiline  // ➕ Enables multi-line input
+              rows={4}   // ➕ Adjust the number of visible rows
+            />
             <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
 
             {errors.items && <Alert severity="error">{errors.items}</Alert>}
@@ -333,7 +353,7 @@ const CreateInvoice = () => {
                     <TableCell>Quantity</TableCell>
                     <TableCell>Unit</TableCell>
                     <TableCell>Description</TableCell>
-                    <TableCell>Rate</TableCell>
+                    <TableCell>Price/Rate</TableCell>
                     <TableCell>Discount (%)</TableCell>
                     <TableCell>Gross</TableCell>
                     <TableCell>Net</TableCell>
@@ -394,7 +414,7 @@ const CreateInvoice = () => {
               <MenuItem value="Hour">Hour</MenuItem>
             </TextField>
             <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
-            <TextField label="Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
+            <TextField label="Price/Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
             <TextField label="Discount (%)" type="number" name="discount" fullWidth margin="normal" value={newItem.discount} onChange={handleItemChange} inputProps={{ min: 0, max: 100 }} error={!!errors.discount} helperText={errors.discount} />
 
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
