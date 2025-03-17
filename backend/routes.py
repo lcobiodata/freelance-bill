@@ -637,7 +637,7 @@ def get_invoice(invoice_id):
         "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
         "due_date": invoice.due_date.strftime("%Y-%m-%d"),
         "currency": invoice.currency.name,
-        "tax": invoice.tax,
+        "tax_rate": invoice.tax_rate,
         "status": invoice.status.value,  # Convert enum to string
         "payment_method": invoice.payment_method.value,  # Convert enum to string
         "payment_date": invoice.payment_date.strftime("%Y-%m-%d") if invoice.payment_date else None,
