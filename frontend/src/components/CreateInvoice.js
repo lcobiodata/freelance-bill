@@ -179,25 +179,25 @@ const CreateInvoice = () => {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(newClient),
       });
-
+  
       if (!response.ok) throw new Error("Failed to add client");
-
+  
       const addedClient = await response.json();
+  
+      // ✅ Update the client list in state
       setClients((prev) => [...prev, addedClient]);
       setInvoice((prev) => ({ ...prev, client_id: addedClient.id }));
       setIsAddingClient(false);
+  
+      // ✅ Clear the new client form fields
       setNewClient({ name: "", business_name: "", email: "", phone: "", address: "", tax_number: "" });
-
-      // Wait for a couple of seconds to ensure the new client appears in the dropdown
-      setIsLoadingClients(true);
-      setTimeout(() => {
-        setIsLoadingClients(false);
-      }, 2000);
+  
     } catch (error) {
       console.error("Error adding client:", error);
     }
     setIsSavingClient(false);
   };
+  
 
   return (
     <Container maxWidth="md">
