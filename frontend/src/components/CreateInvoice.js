@@ -48,6 +48,7 @@ const CreateInvoice = () => {
   const [isAddingClient, setIsAddingClient] = useState(false);
   const [newClient, setNewClient] = useState({ name: "", business_name: "", email: "", phone: "", address: "", tax_number: "" });
   const [isSavingClient, setIsSavingClient] = useState(false);
+  const [isLoadingClients, setIsLoadingClients] = useState(false); // Loading state for waiting after saving client
 
   useEffect(() => {
     fetchClients();
@@ -71,6 +72,11 @@ const CreateInvoice = () => {
     const { name, value } = e.target;
     setNewItem((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleNewClientChange = (e) => {
+    const { name, value } = e.target;
+    setNewClient((prev) => ({ ...prev, [name]: value }));
   };
 
   const saveItem = () => {
@@ -124,13 +130,6 @@ const CreateInvoice = () => {
     }
   };
 
-  // ✅ Fix: Ensure new client state updates correctly
-  const handleNewClientChange = (e) => {
-    const { name, value } = e.target;
-    setNewClient((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // ✅ Fix: Correctly handle saving a new client
   const handleSaveNewClient = async () => {
     setIsSavingClient(true);
     try {
@@ -139,27 +138,25 @@ const CreateInvoice = () => {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(newClient),
       });
-  
+
       if (!response.ok) throw new Error("Failed to add client");
-  
+
       const addedClient = await response.json();
-  
-      // ✅ Update the state immediately
       setClients((prev) => [...prev, addedClient]);
       setInvoice((prev) => ({ ...prev, client_id: addedClient.id }));
-  
-      // ✅ Fetch fresh client list (ensure full sync)
-      await fetchClients();
-  
-      // ✅ Close the modal and reset form
       setIsAddingClient(false);
       setNewClient({ name: "", business_name: "", email: "", phone: "", address: "", tax_number: "" });
+
+      // Wait for a couple of seconds to ensure the new client appears in the dropdown
+      setIsLoadingClients(true);
+      setTimeout(() => {
+        setIsLoadingClients(false);
+      }, 2000);
     } catch (error) {
       console.error("Error adding client:", error);
     }
     setIsSavingClient(false);
   };
-  
 
   return (
     <Container maxWidth="md">
@@ -175,19 +172,38 @@ const CreateInvoice = () => {
         ) : (
           <>
             {/* ✅ Client Selection */}
-            <ClientSelection clients={clients} invoice={invoice} handleChange={handleChange} errors={errors} setIsAddingClient={setIsAddingClient} />
+            {isLoadingClients ? (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+                <CircularProgress size={40} />
+              </Box>
+            ) : (
+              <ClientSelection clients={clients} invoice={invoice} handleChange={handleChange} errors={errors} setIsAddingClient={setIsAddingClient} />
+            )}
 
             {/* ✅ Invoice Form */}
             <TextField label="Issue Date *" type="date" name="issue_date" fullWidth margin="normal" value={invoice.issue_date} onChange={handleChange} InputLabelProps={{ shrink: true }} error={!!errors.issue_date} helperText={errors.issue_date} />
             <TextField label="Due Date *" type="date" name="due_date" fullWidth margin="normal" value={invoice.due_date} onChange={handleChange} InputLabelProps={{ shrink: true }} error={!!errors.due_date} helperText={errors.due_date} />
 
+            <TextField select label="Currency *" name="currency" fullWidth margin="normal" value={invoice.currency} onChange={handleChange} error={!!errors.currency} helperText={errors.currency}>
+              <MenuItem value="USD">USD</MenuItem>
+              <MenuItem value="EUR">EUR</MenuItem>
+              <MenuItem value="GBP">GBP</MenuItem>
+              {/* Add more currencies as needed */}
+            </TextField>
+
             <TextField label="Tax (%)" type="number" name="tax_rate" fullWidth margin="normal" value={invoice.tax_rate} onChange={handleChange} inputProps={{ min: 0, max: 100 }} error={!!errors.tax_rate} helperText={errors.tax_rate} />
 
             <TextField select label="Payment Method *" name="payment_method" fullWidth margin="normal" value={invoice.payment_method} onChange={handleChange} error={!!errors.payment_method} helperText={errors.payment_method}>
               <MenuItem value="Cash">Cash</MenuItem>
-              <MenuItem value="Credit Card">Credit Card</MenuItem>
-              <MenuItem value="PayPal">PayPal</MenuItem>
+              <MenuItem value="Check">Check</MenuItem>
               <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+              <MenuItem value="Credit Card">Credit Card</MenuItem>
+              <MenuItem value="Debit Card">Debit Card</MenuItem>
+              <MenuItem value="Direct Debit">Direct Debit</MenuItem>
+              <MenuItem value="PayPal">PayPal</MenuItem>
+              <MenuItem value="Stripe">Stripe</MenuItem>
+              <MenuItem value="Barter Trade">Barter Trade</MenuItem>
+              <MenuItem value="Other">Other</MenuItem>
             </TextField>
 
             <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
@@ -207,7 +223,7 @@ const CreateInvoice = () => {
         )}
       </Paper>
 
-      {/* ✅ Fixed New Client Dialog */}
+      {/* ✅ New Client Dialog */}
       <NewClientDialog isAddingClient={isAddingClient} setIsAddingClient={setIsAddingClient} newClient={newClient} handleNewClientChange={handleNewClientChange} handleSaveNewClient={handleSaveNewClient} isSavingClient={isSavingClient} />
     </Container>
   );
