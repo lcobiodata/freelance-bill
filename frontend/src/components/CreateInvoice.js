@@ -110,8 +110,29 @@ const CreateInvoice = () => {
     setInvoice((prev) => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
   };
 
+  const validateFields = () => {
+    const newErrors = {};
+    if (!invoice.client_id) newErrors.client_id = "Client is required.";
+    if (!invoice.issue_date) newErrors.issue_date = "Issue date is required.";
+    if (!invoice.due_date) newErrors.due_date = "Due date is required.";
+    if (invoice.due_date && invoice.issue_date && new Date(invoice.due_date) < new Date(invoice.issue_date)) {
+      newErrors.due_date = "Due date cannot be earlier than issue date.";
+    }
+    if (invoice.issue_date && invoice.due_date && new Date(invoice.issue_date) > new Date(invoice.due_date)) {
+      newErrors.issue_date = "Issue date cannot be later than due date.";
+    }
+    if (!invoice.currency) newErrors.currency = "Currency is required.";
+    if (!invoice.payment_method) newErrors.payment_method = "Payment method is required.";
+    if (!invoice.payment_details) newErrors.payment_details = "Payment details are required.";
+    if (invoice.items.length === 0) newErrors.items = "At least one item is required.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateFields()) return;
+
     setIsRedirecting(true);
 
     try {
