@@ -43,12 +43,22 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
   return (
     <>
       <TableContainer component={Paper} sx={{ height: 400, width: "100%", overflow: "auto" }}>
-        <Table stickyHeader sx={{ minWidth: 800 }}>
+        <Table stickyHeader sx={{ minWidth: 1200 }}>
           <TableHead>
             <TableRow>
               <TableCell>Invoice #</TableCell>
               <TableCell>Client</TableCell>
-              <TableCell>Total</TableCell>
+              <TableCell>Issue Date</TableCell>
+              <TableCell>Due Date</TableCell>
+              <TableCell>Currency</TableCell>
+              <TableCell>Tax Rate (%)</TableCell>
+              <TableCell>Subtotal</TableCell>
+              <TableCell>Total Discount</TableCell>
+              <TableCell>Tax Amount</TableCell>
+              <TableCell>Total Amount</TableCell>
+              <TableCell>Payment Method</TableCell>
+              <TableCell>Payment Details</TableCell>
+              <TableCell>Payment Date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -56,7 +66,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={15} align="center">
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -65,9 +75,17 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
                 <TableRow key={invoice.invoice_number}>
                   <TableCell>{invoice.invoice_number}</TableCell>
                   <TableCell>{invoice.client || "Unknown"}</TableCell>
-                  <TableCell>
-                    ${invoice.total_amount !== undefined ? Number(invoice.total_amount).toFixed(2) : "N/A"}
-                  </TableCell>
+                  <TableCell>{invoice.issue_date}</TableCell>
+                  <TableCell>{invoice.due_date}</TableCell>
+                  <TableCell>{invoice.currency}</TableCell>
+                  <TableCell>{invoice.tax_rate.toFixed(2)}</TableCell>
+                  <TableCell>{invoice.subtotal.toFixed(2)}</TableCell>
+                  <TableCell>{invoice.total_discount.toFixed(2)}</TableCell>
+                  <TableCell>{invoice.tax_amount.toFixed(2)}</TableCell>
+                  <TableCell>{invoice.total_amount !== undefined ? Number(invoice.total_amount).toFixed(2) : "N/A"}</TableCell>
+                  <TableCell>{invoice.payment_method}</TableCell>
+                  <TableCell>{invoice.payment_details}</TableCell>
+                  <TableCell>{invoice.payment_date}</TableCell>
                   <TableCell>{invoice.status}</TableCell>
                   <TableCell>
                     {invoice.status !== "Paid" && (
