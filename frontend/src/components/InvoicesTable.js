@@ -14,6 +14,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Box,
+  Typography
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { Add } from "@mui/icons-material";
@@ -21,6 +23,8 @@ import { Add } from "@mui/icons-material";
 export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const handleOpenDialog = (invoiceId) => {
     setSelectedInvoice(invoiceId);
@@ -34,11 +38,20 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
 
   const handleConfirmMarkAsPaid = () => {
     if (selectedInvoice) {
-      markAsPaid(selectedInvoice); //  Now correctly passing invoice ID
+      markAsPaid(selectedInvoice); // Now correctly passing invoice ID
     }
     handleCloseDialog();
   };
-  
+
+  const handleOpenItemsDialog = (items) => {
+    setSelectedItems(items);
+    setItemsDialogOpen(true);
+  };
+
+  const handleCloseItemsDialog = () => {
+    setItemsDialogOpen(false);
+    setSelectedItems([]);
+  };
 
   return (
     <>
@@ -59,6 +72,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
               <TableCell>Payment Method</TableCell>
               <TableCell>Payment Details</TableCell>
               <TableCell>Payment Date</TableCell>
+              <TableCell>Items</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -66,7 +80,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={15} align="center">
+                <TableCell colSpan={16} align="center">
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -86,6 +100,11 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
                   <TableCell>{invoice.payment_method}</TableCell>
                   <TableCell>{invoice.payment_details}</TableCell>
                   <TableCell>{invoice.payment_date}</TableCell>
+                  <TableCell>
+                    <Button variant="outlined" onClick={() => handleOpenItemsDialog(invoice.items)}>
+                      View Items
+                    </Button>
+                  </TableCell>
                   <TableCell>{invoice.status}</TableCell>
                   <TableCell>
                     {invoice.status !== "Paid" && (
@@ -128,6 +147,46 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
           <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
           <Button onClick={handleConfirmMarkAsPaid} color="primary" variant="contained">
             Yes, Mark as Paid
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Items Dialog */}
+      <Dialog open={itemsDialogOpen} onClose={handleCloseItemsDialog}>
+        <DialogTitle>Invoice Items</DialogTitle>
+        <DialogContent>
+          <Table size="small" aria-label="invoice-items">
+            <TableHead>
+              <TableRow>
+                <TableCell>Type</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>Quantity</TableCell>
+                <TableCell>Unit</TableCell>
+                <TableCell>Price/Rate</TableCell>
+                <TableCell>Discount (%)</TableCell>
+                <TableCell>Gross Amount</TableCell>
+                <TableCell>Net Amount</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {selectedItems.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.type}</TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>{item.unit}</TableCell>
+                  <TableCell>{item.rate}</TableCell>
+                  <TableCell>{item.discount}</TableCell>
+                  <TableCell>{(item.quantity * item.rate).toFixed(2)}</TableCell>
+                  <TableCell>{((item.quantity * item.rate) * (1 - item.discount / 100)).toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseItemsDialog} color="primary">
+            Close
           </Button>
         </DialogActions>
       </Dialog>
