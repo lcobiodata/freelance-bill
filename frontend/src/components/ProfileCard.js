@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TextField, Button, Box, CircularProgress, Paper, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
 
-export const ProfileForm = ({ user, loading, updateUser }) => {
+export const ProfileCard = ({ user, loading, updateUser }) => {
   const [formData, setFormData] = useState({
     name: "",
     business_name: "",
@@ -49,7 +49,11 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
   };
 
   return (
-    <Paper elevation={4} sx={{ p: 4, width: "100%", maxWidth: 600, mx: "auto" }}>
+    <Paper elevation={4} sx={{ p: 4, display: 'flex', flexDirection: 'column', maxWidth: 200, mx: 'auto' }}>
+      <Typography variant="h5" gutterBottom>
+        Profile
+      </Typography>
+    
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
           <CircularProgress />
@@ -65,7 +69,7 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
               { label: "Address", value: user.address },
               { label: "Tax Number", value: user.tax_number },
             ].map(({ label, value }) => (
-              <Grid item xs={12} sm={6} key={label}>
+              <Grid item xs={12} key={label}>
                 <Typography variant="subtitle1" fontWeight="bold">
                   {label}
                 </Typography>
@@ -81,7 +85,7 @@ export const ProfileForm = ({ user, loading, updateUser }) => {
             color="secondary" 
             startIcon={<EditIcon />} 
             onClick={handleOpenDialog} 
-            sx={{ mt: 2 }}
+            sx={{ mt: 'auto' }}
           >
             Edit Profile
           </Button>

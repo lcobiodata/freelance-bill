@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent } from "@mui/material";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
-import { ProfileForm } from "./ProfileForm"; // Import the new Profile component
+import { ProfileCard } from "./ProfileCard"; // Import the new Profile component
 import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
 import TopClientRevenueCard from "./TopClientRevenueCard";
 
@@ -93,27 +93,40 @@ const Dashboard = () => {
   
       if (!response.ok) throw new Error("Failed to mark invoice as paid");
   
-      fetchInvoices(); // Refresh invoices after marking as paid
+      // Update the invoice status locally
+      setInvoices(prevInvoices => prevInvoices.map(invoice => 
+        invoice.id === invoiceId ? { ...invoice, status: "Paid" } : invoice
+      ));
     } catch (error) {
       console.error("Error marking invoice as paid:", error);
     }
   };
 
   const markAsCancelled = async (invoiceId) => {
-    console.log("Marking invoice as cancelled:", invoiceId);
+    console.log("Cancelling invoice:", invoiceId);
     try {
-      const response = await fetch(`${API_URL}/invoice/${invoiceId}/cancel`, { // ➡️ Use correct API endpoint
+      const response = await fetch(`${API_URL}/invoice/${invoiceId}/cancel`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
   
-      if (!response.ok) throw new Error("Failed to mark invoice as cancelled");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error cancelling invoice:", errorData);
+        throw new Error("Failed to cancel invoice.");
+      }
   
-      fetchInvoices(); // Refresh invoices after marking as cancelled
+      // Update the invoice status locally
+      setInvoices(prevInvoices => prevInvoices.map(invoice => 
+        invoice.id === invoiceId ? { ...invoice, status: "Cancelled" } : invoice
+      ));
     } catch (error) {
-      console.error("Error marking invoice as cancelled:", error);
+      console.error("Error cancelling invoice:", error);
     }
-  };  
+  };
 
   const calculateTotalRevenue = () => {
     return invoices.reduce((total, invoice) => {
@@ -148,110 +161,109 @@ const Dashboard = () => {
   const { topLoyaltyClient, topRevenueClient } = findTopClients();
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome, {user ? user.name : "User"}!
-        </Typography>
-        <Typography variant="subtitle1" color="textSecondary">
-          Here is your dashboard overview. Manage your clients, invoices, and profile information.
-        </Typography>
-      </Box>
-
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Total Invoices
-              </Typography>
-              <Typography variant="h4">
-                {invoices.length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Total Clients
-              </Typography>
-              <Typography variant="h4">
-                {clients.length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Total Revenue
-              </Typography>
-              <Typography variant="h4">
-                ${calculateTotalRevenue().toFixed(2)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Pending Invoices
-              </Typography>
-              <Typography variant="h4">
-                {countPendingInvoices()}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        {/* ✅ Place "Top Client" cards within the same Grid layout */}
-        <Grid item xs={12} sm={4}>
-          <TopClientLoyaltyCard client={topLoyaltyClient} />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TopClientRevenueCard client={topRevenueClient} />
-        </Grid>
+    <Grid container spacing={3} sx={{ height: '100%' }}>
+      <Grid item xs={12} sm={3}>
+        <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} /> 
       </Grid>
+      <Grid item xs={12} sm={9}>
+        <Container maxWidth="lg">
+          <Box sx={{ my: 4 }}>
+            <Typography variant="h4" gutterBottom>
+              Welcome, {user ? user.name : "User"}!
+            </Typography>
+            <Typography variant="subtitle1" color="textSecondary">
+              Here is your dashboard overview. Manage your clients, invoices, and profile information.
+            </Typography>
+          </Box>
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Tabs
-          value={tabIndex}
-          onChange={(e, newValue) => setTabIndex(newValue)}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="fullWidth"
-          sx={{ mb: 3 }}
-        >
-          <Tab 
-            label="Profile" 
-            sx={{ 
-              fontWeight: tabIndex === 0 ? 'bold' : 'normal', 
-              color: tabIndex === 0 ? 'primary.main' : 'text.secondary' 
-            }} 
-          />
-          <Tab 
-            label="Clients" 
-            sx={{ 
-              fontWeight: tabIndex === 1 ? 'bold' : 'normal', 
-              color: tabIndex === 1 ? 'primary.main' : 'text.secondary' 
-            }} 
-          />
-          <Tab 
-            label="Invoices" 
-            sx={{ 
-              fontWeight: tabIndex === 2 ? 'bold' : 'normal', 
-              color: tabIndex === 2 ? 'primary.main' : 'text.secondary' 
-            }} 
-          />
-        </Tabs>
-        {tabIndex === 0 && <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />}
-        {tabIndex === 1 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
-        {tabIndex === 2 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} />}
-      </Paper>
-    </Container>
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                    Total Invoices
+                  </Typography>
+                  <Typography variant="h4">
+                    {invoices.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                    Total Clients
+                  </Typography>
+                  <Typography variant="h4">
+                    {clients.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                    Total Revenue
+                  </Typography>
+                  <Typography variant="h4">
+                    ${calculateTotalRevenue().toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                    Pending Invoices
+                  </Typography>
+                  <Typography variant="h4">
+                    {countPendingInvoices()}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            {/* ✅ Place "Top Client" cards within the same Grid layout */}
+            <Grid item xs={12} sm={4}>
+              <TopClientLoyaltyCard client={topLoyaltyClient} />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TopClientRevenueCard client={topRevenueClient} />
+            </Grid>
+          </Grid>
+
+          <Paper elevation={3} sx={{ p: 4 }}>
+            <Tabs
+              value={tabIndex}
+              onChange={(e, newValue) => setTabIndex(newValue)}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="fullWidth"
+              sx={{ mb: 3 }}
+            >
+              <Tab 
+                label="Clients" 
+                sx={{ 
+                  fontWeight: tabIndex === 0 ? 'bold' : 'normal', 
+                  color: tabIndex === 0 ? 'primary.main' : 'text.secondary' 
+                }} 
+              />
+              <Tab 
+                label="Invoices" 
+                sx={{ 
+                  fontWeight: tabIndex === 1 ? 'bold' : 'normal', 
+                  color: tabIndex === 1 ? 'primary.main' : 'text.secondary' 
+                }} 
+              />
+            </Tabs>
+            {tabIndex === 0 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
+            {tabIndex === 1 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} />}
+          </Paper>
+        </Container>
+      </Grid>
+    </Grid>
   );
 };
 
