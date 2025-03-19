@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -29,6 +29,12 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
   const [localInvoices, setLocalInvoices] = useState(invoices); // Track status locally
   const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+
+  useEffect(() => {
+    // Sort invoices numerically by invoice number
+    const sortedInvoices = [...invoices].sort((a, b) => a.invoice_number - b.invoice_number);
+    setLocalInvoices(sortedInvoices);
+  }, [invoices]);
 
   // Open confirmation dialog for marking Paid or Cancelled
   const handleOpenActionDialog = (invoiceId, action) => {
