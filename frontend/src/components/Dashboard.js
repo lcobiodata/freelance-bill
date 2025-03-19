@@ -112,17 +112,20 @@ const Dashboard = () => {
 
   const findTopClients = () => {
     const clientStats = clients.map(client => {
-      const clientInvoices = invoices.filter(invoice => invoice.clientId === client.id);
+      const clientInvoices = invoices.filter(invoice => {
+        return invoice.client_id === client.id; // Ensure the property name matches
+      });
+      // console.log("Client invoices:", clientInvoices); // Debugging: Log the client invoices
       return {
         ...client,
         invoiceCount: clientInvoices.length,
         totalRevenue: clientInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.total_amount || 0), 0),
       };
     });
-
+  
     const topLoyaltyClient = clientStats.sort((a, b) => b.invoiceCount - a.invoiceCount)[0] || null;
     const topRevenueClient = clientStats.sort((a, b) => b.totalRevenue - a.totalRevenue)[0] || null;
-
+  
     return { topLoyaltyClient, topRevenueClient };
   };
 

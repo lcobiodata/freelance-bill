@@ -446,6 +446,8 @@ def get_invoices():
         items = InvoiceItem.query.filter_by(invoice_id=inv.id).all()
         invoices_data.append({
             "id": inv.id,
+            "user_id": inv.user_id,
+            "client_id": inv.client_id,
             "invoice_number": inv.invoice_number,
             "client": inv.client.name if inv.client else "Unknown",
             "issue_date": inv.issue_date.strftime("%Y-%m-%d"),
@@ -650,6 +652,8 @@ def get_invoice(invoice_id):
 
     return jsonify({
         "id": invoice.id,
+        "user_id": invoice.user_id,
+        "client_id": invoice.client_id,
         "invoice_number": invoice.invoice_number,
         "client": invoice.client.name if invoice.client else "Unknown",
         "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
