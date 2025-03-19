@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent } from "@mui/material";
+import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent, Button } from "@mui/material";
+import { Link } from "react-router-dom";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
 import { ProfileCard } from "./ProfileCard"; // Import the new Profile component
@@ -163,17 +164,28 @@ const Dashboard = () => {
   return (
     <Grid container spacing={3} sx={{ height: '100%' }}>
       <Grid item xs={12} sm={3}>
-        <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} /> 
+        <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} />
       </Grid>
       <Grid item xs={12} sm={9}>
         <Container maxWidth="lg">
-          <Box sx={{ my: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Welcome, {user ? user.name : "User"}!
-            </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
-              Here is your dashboard overview. Manage your clients, invoices, and profile information.
-            </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                Welcome, {user ? user.name : "User"}!
+              </Typography>
+              <Typography variant="subtitle1" color="textSecondary">
+                Here is your dashboard overview. Manage your clients, invoices, and profile information.
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              color="primary"
+              component={Link}
+              to="/create-invoice"
+              sx={{ fontSize: '1.2rem', p: 2 }}
+            >
+              + New Invoice
+            </Button>
           </Box>
 
           <Grid container spacing={3} sx={{ mb: 4 }}>
