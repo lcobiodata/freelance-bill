@@ -14,33 +14,49 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Box,
-  Typography
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { Add } from "@mui/icons-material";
 
-export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
+export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }) => {
+  const [dialogConfig, setDialogConfig] = useState({
+    open: false,
+    action: null, // "paid" or "cancelled"
+    invoiceId: null,
+  });
+
+  const [localInvoices, setLocalInvoices] = useState(invoices); // Track status locally
   const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
 
-  const handleOpenDialog = (invoiceId) => {
-    setSelectedInvoice(invoiceId);
-    setOpenDialog(true);
+  // Open confirmation dialog for marking Paid or Cancelled
+  const handleOpenActionDialog = (invoiceId, action) => {
+    setDialogConfig({ open: true, action, invoiceId });
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedInvoice(null);
+  const handleCloseActionDialog = () => {
+    setDialogConfig({ open: false, action: null, invoiceId: null });
   };
 
-  const handleConfirmMarkAsPaid = () => {
-    if (selectedInvoice) {
-      markAsPaid(selectedInvoice); // Now correctly passing invoice ID
+  const handleConfirmAction = async () => {
+    if (!dialogConfig.invoiceId) return;
+
+    if (dialogConfig.action === "paid") {
+      await markAsPaid(dialogConfig.invoiceId);
+    } else if (dialogConfig.action === "cancelled") {
+      await markAsCancelled(dialogConfig.invoiceId);
     }
-    handleCloseDialog();
+
+    // Update local state to reflect status change (hides buttons)
+    setLocalInvoices((prevInvoices) =>
+      prevInvoices.map((invoice) =>
+        invoice.id === dialogConfig.invoiceId
+          ? { ...invoice, status: dialogConfig.action === "paid" ? "Paid" : "Cancelled" }
+          : invoice
+      )
+    );
+
+    handleCloseActionDialog();
   };
 
   const handleOpenItemsDialog = (items) => {
@@ -85,7 +101,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
                 </TableCell>
               </TableRow>
             ) : (
-              invoices.map((invoice) => (
+              localInvoices.map((invoice) => (
                 <TableRow key={invoice.invoice_number}>
                   <TableCell>{invoice.invoice_number}</TableCell>
                   <TableCell>{invoice.client || "Unknown"}</TableCell>
@@ -107,14 +123,24 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
                   </TableCell>
                   <TableCell>{invoice.status}</TableCell>
                   <TableCell>
-                    {invoice.status !== "Paid" && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleOpenDialog(invoice.id)} // ✅ Use invoice.id instead of invoice_number
-                      >
-                        Mark as Paid
-                      </Button>
+                    {invoice.status !== "Paid" && invoice.status !== "Cancelled" && (
+                      <>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleOpenActionDialog(invoice.id, "paid")}
+                        >
+                          Mark as Paid
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          sx={{ ml: 1 }}
+                          onClick={() => handleOpenActionDialog(invoice.id, "cancelled")}
+                        >
+                          Mark as Cancelled
+                        </Button>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
@@ -123,30 +149,37 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      
-      <Button 
-        variant="contained" 
-        color="secondary" 
-        sx={{ mt: 2 }} 
-        component={Link} to="/create-invoice"
+
+      <Button
+        variant="contained"
+        color="secondary"
+        sx={{ mt: 2 }}
+        component={Link}
+        to="/create-invoice"
         startIcon={<Add />}
       >
         Create Invoice
       </Button>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      {/* Generic Confirmation Dialog */}
+      <Dialog open={dialogConfig.open} onClose={handleCloseActionDialog}>
         <DialogTitle>Confirm Action</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to mark this invoice as paid? <br />
+            Are you sure you want to mark this invoice as <strong>{dialogConfig.action === "paid" ? "Paid" : "Cancelled"}</strong>? <br />
             <strong>This action cannot be undone.</strong>
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
-          <Button onClick={handleConfirmMarkAsPaid} color="primary" variant="contained">
-            Yes, Mark as Paid
+          <Button onClick={handleCloseActionDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmAction}
+            color={dialogConfig.action === "paid" ? "primary" : "error"}
+            variant="contained"
+          >
+            Yes, Mark as {dialogConfig.action === "paid" ? "Paid" : "Cancelled"}
           </Button>
         </DialogActions>
       </Dialog>

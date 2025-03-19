@@ -99,6 +99,22 @@ const Dashboard = () => {
     }
   };
 
+  const markAsCancelled = async (invoiceId) => {
+    console.log("Marking invoice as cancelled:", invoiceId);
+    try {
+      const response = await fetch(`${API_URL}/invoice/${invoiceId}/cancel`, { // ➡️ Use correct API endpoint
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      if (!response.ok) throw new Error("Failed to mark invoice as cancelled");
+  
+      fetchInvoices(); // Refresh invoices after marking as cancelled
+    } catch (error) {
+      console.error("Error marking invoice as cancelled:", error);
+    }
+  };  
+
   const calculateTotalRevenue = () => {
     return invoices.reduce((total, invoice) => {
       const amount = parseFloat(invoice.total_amount) || 0; // Ensure amount is a number
@@ -233,7 +249,7 @@ const Dashboard = () => {
         </Tabs>
         {tabIndex === 0 && <ProfileForm user={user} loading={loadingUser} updateUser={updateUserDetails} />}
         {tabIndex === 1 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
-        {tabIndex === 2 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} />}
+        {tabIndex === 2 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} />}
       </Paper>
     </Container>
   );
