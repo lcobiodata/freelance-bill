@@ -87,7 +87,7 @@ const Dashboard = () => {
     console.log("Marking invoice as paid:", invoiceId);
     try {
       const response = await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, { // API expects invoice ID
-        method: "POST",
+        method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
   

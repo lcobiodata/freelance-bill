@@ -445,6 +445,7 @@ def get_invoices():
     for inv in invoices:
         items = InvoiceItem.query.filter_by(invoice_id=inv.id).all()
         invoices_data.append({
+            "id": inv.id,
             "invoice_number": inv.invoice_number,
             "client": inv.client.name if inv.client else "Unknown",
             "issue_date": inv.issue_date.strftime("%Y-%m-%d"),
@@ -648,6 +649,7 @@ def get_invoice(invoice_id):
     items = InvoiceItem.query.filter_by(invoice_id=invoice_id).all()
 
     return jsonify({
+        "id": invoice.id,
         "invoice_number": invoice.invoice_number,
         "client": invoice.client.name if invoice.client else "Unknown",
         "issue_date": invoice.issue_date.strftime("%Y-%m-%d"),
@@ -676,7 +678,7 @@ def get_invoice(invoice_id):
     }), 200
 
 # -------------------- Payment Tracking --------------------
-@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["POST"])
+@routes_bp.route("/invoice/<int:invoice_id>/mark-paid", methods=["PUT"])
 @jwt_required()
 def mark_invoice_paid(invoice_id):
     """ Mark an invoice as paid """
