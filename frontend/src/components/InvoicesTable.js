@@ -14,9 +14,10 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { Add } from "@mui/icons-material";
+import { Add, Check, Close } from "@mui/icons-material";
 
 export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }) => {
   const [dialogConfig, setDialogConfig] = useState({
@@ -125,21 +126,20 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
                   <TableCell>
                     {invoice.status !== "Paid" && invoice.status !== "Cancelled" && (
                       <>
-                        <Button
-                          variant="contained"
+                        <IconButton
                           color="primary"
                           onClick={() => handleOpenActionDialog(invoice.id, "paid")}
+                          sx={{ color: 'green' }}
                         >
-                          Mark as Paid
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          sx={{ ml: 1 }}
+                          <Check />
+                        </IconButton>
+                        <IconButton
+                          color="secondary"
                           onClick={() => handleOpenActionDialog(invoice.id, "cancelled")}
+                          sx={{ color: 'red' }}
                         >
-                          Mark as Cancelled
-                        </Button>
+                          <Close />
+                        </IconButton>
                       </>
                     )}
                   </TableCell>
