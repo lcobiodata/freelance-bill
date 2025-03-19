@@ -220,7 +220,7 @@ const Dashboard = () => {
                     Total Revenue
                   </Typography>
                   <Typography variant="h4">
-                    ${calculateTotalRevenue().toFixed(2)}
+                    ${calculateTotalRevenue().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
                 </CardContent>
               </Card>

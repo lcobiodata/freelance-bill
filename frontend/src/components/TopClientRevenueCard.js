@@ -12,8 +12,7 @@ const TopClientRevenueCard = ({ client }) => {
           {client ? client.name : "N/A"}
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          {client ? `$${client.totalRevenue.toFixed(2)} revenue` : ""}
-        </Typography>
+          {client ? `$${client.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} revenue` : ""}        </Typography>
       </CardContent>
     </Card>
   );
