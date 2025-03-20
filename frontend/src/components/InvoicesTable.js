@@ -17,7 +17,7 @@ import {
   IconButton
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { Add, Check, Close } from "@mui/icons-material";
+import { Add, Check, Close, Visibility } from "@mui/icons-material";
 
 export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }) => {
   const [dialogConfig, setDialogConfig] = useState({
@@ -124,9 +124,9 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
                   <TableCell>{invoice.payment_details}</TableCell>
                   <TableCell>{invoice.payment_date}</TableCell>
                   <TableCell>
-                    <Button variant="outlined" onClick={() => handleOpenItemsDialog(invoice.items)}>
-                      View Items
-                    </Button>
+                    <IconButton color="primary" onClick={() => handleOpenItemsDialog(invoice.items)}>
+                      <Visibility />
+                    </IconButton>
                   </TableCell>
                   <TableCell>{invoice.status}</TableCell>
                   <TableCell>
