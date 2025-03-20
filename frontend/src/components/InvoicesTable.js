@@ -82,7 +82,12 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
 
   const generatePDF = (invoice) => {
     const doc = new jsPDF();
-
+  
+    // Invoice details (drawn first, so watermark goes on top later)
+    doc.setTextColor(0, 0, 0); // Reset to black
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+  
     doc.text(`Invoice #${invoice.invoice_number}`, 20, 20);
     doc.text(`Client: ${invoice.client || "Unknown"}`, 20, 30);
     doc.text(`Issue Date: ${invoice.issue_date}`, 20, 40);
@@ -90,8 +95,8 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
     doc.text(`Currency: ${invoice.currency}`, 20, 60);
     doc.text(`Total Amount: ${invoice.total_amount.toFixed(2)}`, 20, 70);
     doc.text(`Payment Method: ${invoice.payment_method}`, 20, 80);
-
-    // ✅ Use the imported autoTable plugin explicitly
+  
+    // Add the table
     autoTable(doc, {
       startY: 90,
       head: [["Type", "Description", "Quantity", "Unit", "Price", "Discount", "Total"]],
@@ -106,6 +111,39 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
       ]),
     });
 
+    // ✅ Apply watermark **after** all content (so it appears on top)
+    let watermarkText = "";
+    let watermarkColor = [];
+
+    if (invoice.status === "Paid") {
+        watermarkText = "PAID";
+        watermarkColor = [0, 128, 0]; // Green
+    } else if (invoice.status === "Cancelled") {
+        watermarkText = "CANCELLED";
+        watermarkColor = [255, 0, 0]; // Red
+    }
+
+    if (watermarkText) {
+        // ✅ Set transparency for the watermark (opacity ~10%)
+        doc.setGState(new doc.GState({ opacity: 0.1 })); // Apply transparency (0.1 = 10% opacity)
+
+        doc.setTextColor(...watermarkColor);
+        doc.setFontSize(80);
+        doc.setFont("helvetica", "bold");
+
+        // Get center position for the watermark
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        doc.text(watermarkText, pageWidth / 2, pageHeight / 2, {
+            align: "center",
+            angle: 45,
+        });
+
+        doc.setGState(new doc.GState({ opacity: 1 })); // Restore full opacity
+    }
+
+    // Generate and open the PDF
     const pdfBlob = doc.output("blob");
     const pdfUrl = URL.createObjectURL(pdfBlob);
     setPdfUrl(pdfUrl);
