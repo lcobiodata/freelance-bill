@@ -17,7 +17,9 @@ import {
   IconButton
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { Add, Check, Close, Visibility } from "@mui/icons-material";
+import { Add, Check, Close, Visibility, Print, Download } from "@mui/icons-material";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }) => {
   const [dialogConfig, setDialogConfig] = useState({
@@ -29,6 +31,8 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
   const [localInvoices, setLocalInvoices] = useState(invoices); // Track status locally
   const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {
     // Sort invoices numerically by invoice number
@@ -74,6 +78,38 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
   const handleCloseItemsDialog = () => {
     setItemsDialogOpen(false);
     setSelectedItems([]);
+  };
+
+  const generatePDF = (invoice) => {
+    const doc = new jsPDF();
+
+    doc.text(`Invoice #${invoice.invoice_number}`, 20, 20);
+    doc.text(`Client: ${invoice.client || "Unknown"}`, 20, 30);
+    doc.text(`Issue Date: ${invoice.issue_date}`, 20, 40);
+    doc.text(`Due Date: ${invoice.due_date}`, 20, 50);
+    doc.text(`Currency: ${invoice.currency}`, 20, 60);
+    doc.text(`Total Amount: ${invoice.total_amount.toFixed(2)}`, 20, 70);
+    doc.text(`Payment Method: ${invoice.payment_method}`, 20, 80);
+
+    // ✅ Use the imported autoTable plugin explicitly
+    autoTable(doc, {
+      startY: 90,
+      head: [["Type", "Description", "Quantity", "Unit", "Price", "Discount", "Total"]],
+      body: invoice.items.map((item) => [
+        item.type,
+        item.description,
+        item.quantity,
+        item.unit,
+        item.rate,
+        `${item.discount}%`,
+        (item.quantity * item.rate * (1 - item.discount / 100)).toFixed(2),
+      ]),
+    });
+
+    const pdfBlob = doc.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    setPdfUrl(pdfUrl);
+    setPdfDialogOpen(true);
   };
 
   return (
@@ -130,19 +166,25 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
                   </TableCell>
                   <TableCell>{invoice.status}</TableCell>
                   <TableCell>
+                    {/* Always show the "Print" button */}
+                    <IconButton color="primary" onClick={() => generatePDF(invoice)}>
+                      <Print />
+                    </IconButton>
+
+                    {/* Only show "Mark as Paid" and "Cancel" buttons for unpaid invoices */}
                     {invoice.status !== "Paid" && invoice.status !== "Cancelled" && (
                       <>
                         <IconButton
                           color="primary"
                           onClick={() => handleOpenActionDialog(invoice.id, "paid")}
-                          sx={{ color: 'green' }}
+                          sx={{ color: "green" }}
                         >
                           <Check />
                         </IconButton>
                         <IconButton
                           color="secondary"
                           onClick={() => handleOpenActionDialog(invoice.id, "cancelled")}
-                          sx={{ color: 'red' }}
+                          sx={{ color: "red" }}
                         >
                           <Close />
                         </IconButton>
@@ -225,6 +267,26 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseItemsDialog} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* PDF Preview Dialog */}
+      <Dialog open={pdfDialogOpen} onClose={() => setPdfDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Invoice PDF Preview</DialogTitle>
+        <DialogContent>
+          {pdfUrl && <iframe src={pdfUrl} width="100%" height="500px" />}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            startIcon={<Download />}
+            variant="contained"
+            color="primary"
+            onClick={() => window.open(pdfUrl, "_blank")}
+          >
+            Download
+          </Button>
+          <Button onClick={() => setPdfDialogOpen(false)} color="secondary">
             Close
           </Button>
         </DialogActions>
