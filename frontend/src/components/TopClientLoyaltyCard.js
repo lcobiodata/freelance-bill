@@ -9,7 +9,7 @@ const TopClientLoyaltyCard = ({ client }) => {
           Top Client (Loyalty)
         </Typography>
         <Typography variant="h4">
-          {client ? client.name : "N/A"}
+          {client ? client.name : "-"}
         </Typography>
         <Typography variant="body2" color="textSecondary">
           {client ? `${client.invoiceCount} invoices` : ""}

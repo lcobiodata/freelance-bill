@@ -9,7 +9,7 @@ const TopClientRevenueCard = ({ client }) => {
           Top Client (Revenue)
         </Typography>
         <Typography variant="h4">
-          {client ? client.name : "N/A"}
+          {client ? client.name : "-"}
         </Typography>
         <Typography variant="body2" color="textSecondary">
           {client ? `$${client.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} revenue` : ""}        </Typography>
