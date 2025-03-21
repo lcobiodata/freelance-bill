@@ -49,7 +49,7 @@ export const ProfileCard = ({ user, loading, updateUser }) => {
   };
 
   return (
-    <Paper elevation={4} sx={{ p: 4, display: 'flex', flexDirection: 'column', maxWidth: 200, mx: 'auto' }}>
+    <Paper elevation={4} sx={{ p: 4, display: 'flex', flexDirection: 'column', maxWidth: 400, mx: 'auto' }}>
       <Typography variant="h4" gutterBottom>
         Profile
       </Typography>
