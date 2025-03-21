@@ -7,7 +7,8 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Button, Container, Box } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton } from "@mui/material";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Import the Exit icon
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./components/Home";
@@ -45,9 +46,9 @@ const Navbar = () => {
                 Dashboard
               </Button>
             )}
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
+            <IconButton color="inherit" onClick={handleLogout}>
+              <ExitToAppIcon />
+            </IconButton>
           </>
         ) : (
           <>
