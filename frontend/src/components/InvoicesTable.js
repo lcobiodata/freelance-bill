@@ -192,16 +192,18 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           if (watermarkText) {
               doc.setGState(new doc.GState({ opacity: 0.1 })); // Apply transparency (0.1 = 10% opacity)
               doc.setTextColor(...watermarkColor);
-              doc.setFontSize(80);
+              
+              // Set font size as 90 if cancelled and 120 if paid
+              doc.setFontSize(watermarkText === "CANCELLED" ? 90 : 120);
               doc.setFont("helvetica", "bold");
   
               // Get center position for the watermark
               const pageWidth = doc.internal.pageSize.getWidth();
               const pageHeight = doc.internal.pageSize.getHeight();
-  
-              doc.text(watermarkText, pageWidth / 2, pageHeight / 2, {
+
+              doc.text(watermarkText, 210 * pageWidth / 297, 210 * pageHeight / 297, {
                   align: "center",
-                  angle: 45,
+                  angle: 54.46,
               });
   
               doc.setGState(new doc.GState({ opacity: 1 })); // Restore full opacity
