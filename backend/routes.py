@@ -10,6 +10,9 @@ from flask_mail import Message, Mail
 from config import Config
 from datetime import datetime
 
+from sqlalchemy.orm import joinedload
+from sqlalchemy import func
+
 bcrypt = Bcrypt()
 mail = Mail()
 
@@ -386,6 +389,28 @@ def create_client():
     db.session.commit()
     return jsonify({"message": "Client created successfully", "client_id": client.id}), 201
 
+# Get a single client by ID
+@routes_bp.route("/clients/<int:client_id>", methods=["GET"])
+@jwt_required()
+def get_client(client_id):
+    """ Fetch a single client by ID """
+    current_user = get_jwt_identity()
+    user = User.query.filter_by(username=current_user).first()
+
+    client = Client.query.filter_by(id=client_id, user_id=user.id).first()
+    if not client:
+        return jsonify({"message": "Client not found"}), 404
+
+    return jsonify({
+        "id": client.id,
+        "name": client.name,
+        "business_name": client.business_name,
+        "email": client.email,
+        "phone": client.phone,
+        "address": client.address,
+        "tax_number": client.tax_number  # Include tax_number
+    }), 200
+
 @routes_bp.route("/clients/<int:client_id>", methods=["PUT"])
 @jwt_required()
 def update_client(client_id):
@@ -415,9 +440,6 @@ def update_client(client_id):
     return jsonify({"message": "Client updated successfully"}), 200
 
 # -------------------- Invoice Routes --------------------
-from sqlalchemy.orm import joinedload
-from sqlalchemy import func
-
 @routes_bp.route("/invoices", methods=["GET"])
 @jwt_required()
 def get_invoices():

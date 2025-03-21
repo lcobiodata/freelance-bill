@@ -21,7 +21,9 @@ import { Add, Check, Close, Visibility, Print, Download } from "@mui/icons-mater
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }) => {
+const API_URL = process.env.REACT_APP_API_URL;
+
+export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, user }) => {
   const [dialogConfig, setDialogConfig] = useState({
     open: false,
     action: null, // "paid" or "cancelled"
@@ -80,76 +82,116 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled }
     setSelectedItems([]);
   };
 
-  const generatePDF = (invoice) => {
-    const doc = new jsPDF();
+  const generatePDF = async (invoice) => {
+    try {
+      // Fetch client details from the API
+      const response = await fetch(`${API_URL}/clients/${invoice.client_id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
   
-    // Invoice details (drawn first, so watermark goes on top later)
-    doc.setTextColor(0, 0, 0); // Reset to black
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
+      if (!response.ok) {
+        throw new Error("Failed to fetch client details");
+      }
   
-    doc.text(`Invoice #${invoice.invoice_number}`, 20, 20);
-    doc.text(`Client: ${invoice.client || "Unknown"}`, 20, 30);
-    doc.text(`Issue Date: ${invoice.issue_date}`, 20, 40);
-    doc.text(`Due Date: ${invoice.due_date}`, 20, 50);
-    doc.text(`Currency: ${invoice.currency}`, 20, 60);
-    doc.text(`Total Amount: ${invoice.total_amount.toFixed(2)}`, 20, 70);
-    doc.text(`Payment Method: ${invoice.payment_method}`, 20, 80);
+      const client = await response.json();
   
-    // Add the table
-    autoTable(doc, {
-      startY: 90,
-      head: [["Type", "Description", "Quantity", "Unit", "Price", "Discount", "Total"]],
-      body: invoice.items.map((item) => [
-        item.type,
-        item.description,
-        item.quantity,
-        item.unit,
-        item.rate,
-        `${item.discount}%`,
-        (item.quantity * item.rate * (1 - item.discount / 100)).toFixed(2),
-      ]),
-    });
-
-    // ✅ Apply watermark **after** all content (so it appears on top)
-    let watermarkText = "";
-    let watermarkColor = [];
-
-    if (invoice.status === "Paid") {
+      // Create PDF Document
+      const doc = new jsPDF();
+  
+      // Business & Client Details
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Invoice", 105, 15, { align: "center" });
+  
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+  
+      doc.text(`Issued by: ${user.business_name || "Your Business Name"}`, 20, 30);
+      doc.text(`Client: ${client.name || "Unknown"}`, 20, 40);
+      doc.text(`Business: ${client.business_name || "N/A"}`, 20, 50);
+      doc.text(`Email: ${client.email || "N/A"}`, 20, 60);
+      doc.text(`Address: ${client.address || "N/A"}`, 20, 70);
+      doc.text(`Tax Number: ${client.tax_number || "N/A"}`, 20, 80);
+  
+      // Invoice Details
+      doc.text(`Invoice #${invoice.invoice_number}`, 140, 30);
+      doc.text(`Issue Date: ${invoice.issue_date}`, 140, 40);
+      doc.text(`Due Date: ${invoice.due_date}`, 140, 50);
+      doc.text(`Currency: ${invoice.currency}`, 140, 60);
+      doc.text(`Total Amount: ${invoice.total_amount.toFixed(2)}`, 140, 70);
+      doc.text(`Payment Method: ${invoice.payment_method}`, 140, 80);
+  
+      // Invoice Items Table
+      autoTable(doc, {
+        startY: 100,
+        head: [["Type", "Description", "Quantity", "Unit", "Rate", "Discount", "Total"]],
+        body: invoice.items.map((item) => [
+          item.type,
+          item.description,
+          item.quantity,
+          item.unit,
+          item.rate.toFixed(2),
+          `${item.discount.toFixed(2)}%`,
+          (item.quantity * item.rate * (1 - item.discount / 100)).toFixed(2),
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], halign: "center" },
+        columnStyles: {
+          2: { halign: "center" },
+          3: { halign: "center" },
+          4: { halign: "right" },
+          5: { halign: "right" },
+          6: { halign: "right" },
+        },
+      });
+  
+      // ✅ Apply Watermark (PAID or CANCELLED)
+      let watermarkText = "";
+      let watermarkColor = [];
+  
+      if (invoice.status === "Paid") {
         watermarkText = "PAID";
         watermarkColor = [0, 128, 0]; // Green
-    } else if (invoice.status === "Cancelled") {
+      } else if (invoice.status === "Cancelled") {
         watermarkText = "CANCELLED";
         watermarkColor = [255, 0, 0]; // Red
-    }
-
-    if (watermarkText) {
-        // ✅ Set transparency for the watermark (opacity ~10%)
-        doc.setGState(new doc.GState({ opacity: 0.1 })); // Apply transparency (0.1 = 10% opacity)
-
+      }
+  
+      if (watermarkText) {
         doc.setTextColor(...watermarkColor);
         doc.setFontSize(80);
         doc.setFont("helvetica", "bold");
-
+  
         // Get center position for the watermark
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
-
+  
+        doc.saveGraphicsState();  // Preserve current settings
+        doc.setGState(new doc.GState({ opacity: 0.2 })); // Apply transparency (20%)
+  
         doc.text(watermarkText, pageWidth / 2, pageHeight / 2, {
-            align: "center",
-            angle: 45,
+          align: "center",
+          angle: 45,
         });
-
-        doc.setGState(new doc.GState({ opacity: 1 })); // Restore full opacity
+  
+        doc.restoreGraphicsState(); // Restore settings
+      }
+  
+      // Generate and open the PDF
+      const pdfBlob = doc.output("blob");
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPdfUrl(pdfUrl);
+      setPdfDialogOpen(true);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
     }
-
-    // Generate and open the PDF
-    const pdfBlob = doc.output("blob");
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    setPdfUrl(pdfUrl);
-    setPdfDialogOpen(true);
   };
-
+  
   return (
     <>
       <TableContainer component={Paper} sx={{ height: 400, width: "100%", overflow: "auto" }}>

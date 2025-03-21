@@ -271,7 +271,7 @@ const Dashboard = () => {
               />
             </Tabs>
             {tabIndex === 0 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
-            {tabIndex === 1 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} />}
+            {tabIndex === 1 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} user={user} />}
           </Paper>
         </Container>
       </Grid>
