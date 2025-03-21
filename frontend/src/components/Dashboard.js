@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent, Button } from "@mui/material";
+import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent, Button, IconButton, Avatar, Tooltip } from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
 import { Link } from "react-router-dom";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
-import { ProfileCard } from "./ProfileCard"; // Import the new Profile component
+import { ProfileCard } from "./ProfileCard"; 
 import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
 import TopClientRevenueCard from "./TopClientRevenueCard";
 
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
+  const [showProfile, setShowProfile] = useState(true); // ✅ State for collapsibility
 
   useEffect(() => {
     if (token) {
@@ -78,26 +80,26 @@ const Dashboard = () => {
       });
 
       if (!response.ok) throw new Error("Failed to update user details");
-      fetchUserDetails(); // Refresh user details after update
+      fetchUserDetails();
     } catch (error) {
       console.error(error);
     }
   };
 
   const markAsPaid = async (invoiceId) => {
-    console.log("Marking invoice as paid:", invoiceId);
     try {
-      const response = await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, { // API expects invoice ID
+      const response = await fetch(`${API_URL}/invoice/${invoiceId}/mark-paid`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       if (!response.ok) throw new Error("Failed to mark invoice as paid");
-  
-      // Update the invoice status locally
-      setInvoices(prevInvoices => prevInvoices.map(invoice => 
-        invoice.id === invoiceId ? { ...invoice, status: "Paid" } : invoice
-      ));
+
+      setInvoices((prevInvoices) =>
+        prevInvoices.map((invoice) =>
+          invoice.id === invoiceId ? { ...invoice, status: "Paid" } : invoice
+        )
+      );
     } catch (error) {
       console.error("Error marking invoice as paid:", error);
     }
@@ -113,65 +115,82 @@ const Dashboard = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error cancelling invoice:", errorData);
         throw new Error("Failed to cancel invoice.");
       }
-  
-      // Update the invoice status locally
-      setInvoices(prevInvoices => prevInvoices.map(invoice => 
-        invoice.id === invoiceId ? { ...invoice, status: "Cancelled" } : invoice
-      ));
+
+      setInvoices((prevInvoices) =>
+        prevInvoices.map((invoice) =>
+          invoice.id === invoiceId ? { ...invoice, status: "Cancelled" } : invoice
+        )
+      );
     } catch (error) {
       console.error("Error cancelling invoice:", error);
     }
   };
 
   const calculateTotalRevenue = () => {
-    return invoices.reduce((total, invoice) => {
-      const amount = parseFloat(invoice.total_amount) || 0; // Ensure amount is a number
-      return total + amount;
-    }, 0);
+    return invoices.reduce((total, invoice) => total + (parseFloat(invoice.total_amount) || 0), 0);
   };
 
   const countPendingInvoices = () => {
-    return invoices.filter(invoice => !invoice.paid).length;
+    return invoices.filter((invoice) => !invoice.paid).length;
   };
 
   const findTopClients = () => {
-    const clientStats = clients.map(client => {
-      const clientInvoices = invoices.filter(invoice => {
-        return invoice.client_id === client.id; // Ensure the property name matches
-      });
-      // console.log("Client invoices:", clientInvoices); // Debugging: Log the client invoices
+    const clientStats = clients.map((client) => {
+      const clientInvoices = invoices.filter((invoice) => invoice.client_id === client.id);
       return {
         ...client,
         invoiceCount: clientInvoices.length,
-        totalRevenue: clientInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.total_amount || 0), 0),
+        totalRevenue: clientInvoices.reduce(
+          (sum, invoice) => sum + parseFloat(invoice.total_amount || 0),
+          0
+        ),
       };
     });
-  
-    const topLoyaltyClient = clientStats.sort((a, b) => b.invoiceCount - a.invoiceCount)[0] || null;
-    const topRevenueClient = clientStats.sort((a, b) => b.totalRevenue - a.totalRevenue)[0] || null;
-  
-    return { topLoyaltyClient, topRevenueClient };
+
+    return {
+      topLoyaltyClient: clientStats.sort((a, b) => b.invoiceCount - a.invoiceCount)[0] || null,
+      topRevenueClient: clientStats.sort((a, b) => b.totalRevenue - a.totalRevenue)[0] || null,
+    };
   };
 
   const { topLoyaltyClient, topRevenueClient } = findTopClients();
 
   return (
-    <Grid container spacing={3} sx={{ height: '100%' }}>
-      <Grid item xs={12} sm={3}>
-        <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} />
+    <Grid container spacing={3} sx={{ height: "100%" }}>
+      <Grid item xs={showProfile ? 3 : 1} sx={{ transition: "width 0.3s ease-in-out" }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
+            <IconButton onClick={() => setShowProfile(!showProfile)}>
+              <Avatar>
+                <PersonIcon />
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {showProfile && (
+          <Box sx={{ mt: 2 }}>
+            <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} />
+          </Box>
+        )}
       </Grid>
-      <Grid item xs={12} sm={9}>
+
+      <Grid item xs={showProfile ? 9 : 11} sx={{ transition: "width 0.3s ease-in-out" }}>
         <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 4 }}>
             <Box>
               <Typography variant="h4" gutterBottom>
-                Welcome, <Typography component="span" variant="h4" fontWeight="bold">{user ? user.name : "User"}</Typography>!
+                Welcome,{" "}
+                <Typography component="span" variant="h4" fontWeight="bold">
+                  {user ? user.name : "User"}
+                </Typography>
+                !
               </Typography>
               <Typography variant="subtitle1" color="textSecondary">
                 Here is your dashboard overview. Manage your clients, invoices, and profile information.
@@ -271,7 +290,9 @@ const Dashboard = () => {
               />
             </Tabs>
             {tabIndex === 0 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
-            {tabIndex === 1 && <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} user={user} />}
+            {tabIndex === 1 && (
+              <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} user={user} />
+            )}
           </Paper>
         </Container>
       </Grid>
