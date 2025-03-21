@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
-  const [showProfile, setShowProfile] = useState(true); // ✅ State for collapsibility
+  const [showProfile, setShowProfile] = useState(false); // ✅ State for collapsibility
 
   useEffect(() => {
     if (token) {
@@ -278,7 +278,15 @@ const Dashboard = () => {
           </Paper>
         </Container>
       </Grid>
-      <Grid item xs={showProfile ? 3 : 1} sx={{ transition: "width 0.3s ease-in-out" }}>
+      <Grid item xs={showProfile ? 3 : "auto"} 
+        sx={{ 
+          transition: "width 0.3s ease-in-out", 
+          minWidth: showProfile ? "inherit" : "50px", 
+          display: "flex", 
+          justifyContent: "flex-end", 
+          alignItems: "flex-start" 
+        }}
+      >
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
           <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
             <IconButton onClick={() => setShowProfile(!showProfile)}>
