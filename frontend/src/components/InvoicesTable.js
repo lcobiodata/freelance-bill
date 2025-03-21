@@ -83,115 +83,140 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
   };
 
   const generatePDF = async (invoice) => {
-    try {
-      // Fetch client details from the API
-      const response = await fetch(`${API_URL}/clients/${invoice.client_id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      });
+      try {
+          // Fetch client details from the API
+          const response = await fetch(`${API_URL}/clients/${invoice.client_id}`, {
+              method: "GET",
+              headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  "Content-Type": "application/json",
+              },
+          });
   
-      if (!response.ok) {
-        throw new Error("Failed to fetch client details");
+          if (!response.ok) {
+              throw new Error("Failed to fetch client details");
+          }
+  
+          const client = await response.json();
+  
+          // Create PDF Document
+          const doc = new jsPDF();
+  
+          // Business & Client Details
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(20);
+          doc.text("INVOICE", 105, 20, { align: "center" });
+  
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "normal");
+  
+          // Business details
+          doc.setFont("helvetica", "bold");
+          doc.text(user.business_name || "Your Business Name", 20, 30);
+          doc.setFont("helvetica", "normal");
+          doc.text("Your Registered Business Address", 20, 35); // Placeholder
+          doc.text(`Email: ${user.email || "Your Email"}`, 20, 40);
+          doc.text(`Phone: ${user.phone || "Your Phone Number"}`, 20, 45);
+          if (user.website) {
+              doc.text(`Website: ${user.website}`, 20, 50);
+          }
+          doc.setFont("helvetica", "bold");
+          doc.text(`Invoice Number: ${invoice.invoice_number}`, 20, 55);
+  
+          // Client details
+          doc.setFont("helvetica", "bold");
+          doc.text("Invoice To:", 20, 65);
+          doc.setFont("helvetica", "normal");
+          doc.text(client.name || "Client’s Name or Business Name", 20, 70);
+          doc.text(client.address || "Client’s Address", 20, 75);
+  
+          // Invoice dates
+          doc.setFont("helvetica", "bold");
+          doc.text(`Invoice Date: ${invoice.issue_date}`, 20, 85);
+          doc.text(`Payment Due By: ${invoice.due_date}`, 20, 90);
+  
+          // Table of items
+          autoTable(doc, {
+              startY: 100,
+              head: [["Item", "Description", "Quantity", "Unit Price (£)", "Total (£)"]],
+              body: invoice.items.map((item, index) => [
+                  index + 1,
+                  item.description,
+                  item.quantity,
+                  item.rate.toFixed(2),
+                  (item.quantity * item.rate * (1 - item.discount / 100)).toFixed(2),
+              ]),
+              foot: [
+                  ["", "", "", "Subtotal:", invoice.subtotal.toFixed(2)],
+                  ["", "", "", "VAT (if applicable):", invoice.tax_amount.toFixed(2)],
+                  ["", "", "", "Total Due:", invoice.total_amount.toFixed(2)],
+              ],
+          });
+  
+          // Payment details
+          doc.setFont("helvetica", "bold");
+          doc.text("Payment Details", 20, doc.lastAutoTable.finalY + 20);
+          doc.setFont("helvetica", "normal");
+          doc.text("Bank Name: Your Bank", 20, doc.lastAutoTable.finalY + 25); // Placeholder
+          doc.text("Account Name: Your Name / Business Name", 20, doc.lastAutoTable.finalY + 30); // Placeholder
+          doc.text("Sort Code: XX-XX-XX", 20, doc.lastAutoTable.finalY + 35); // Placeholder
+          doc.text("Account Number: XXXX XXXX", 20, doc.lastAutoTable.finalY + 40); // Placeholder
+  
+          doc.setFont("helvetica", "bold");
+          doc.text("Or Pay via PayPal / Stripe:", 20, doc.lastAutoTable.finalY + 50);
+          doc.setFont("helvetica", "normal");
+          doc.text("Your Payment Link", 20, doc.lastAutoTable.finalY + 55); // Placeholder
+  
+          // Legal notes
+          doc.setFont("helvetica", "bold");
+          doc.text("Legal Notes", 20, doc.lastAutoTable.finalY + 65);
+          doc.setFont("helvetica", "normal");
+          doc.text("If not VAT registered, include: “Not VAT Registered”.", 20, doc.lastAutoTable.finalY + 70);
+          doc.text("[Your Brand Name] is a registered trademark of [Your Name].", 20, doc.lastAutoTable.finalY + 75); // Placeholder
+          doc.text("Payment terms: Payment due within 14 days of invoice date.", 20, doc.lastAutoTable.finalY + 80);
+  
+          doc.text("Thank you for your business! Please contact us for any questions regarding this invoice.", 20, doc.lastAutoTable.finalY + 90);
+  
+          // Apply watermark if needed
+          let watermarkText = "";
+          let watermarkColor = [];
+  
+          if (invoice.status === "Paid") {
+              watermarkText = "PAID";
+              watermarkColor = [0, 128, 0]; // Green
+          } else if (invoice.status === "Cancelled") {
+              watermarkText = "CANCELLED";
+              watermarkColor = [255, 0, 0]; // Red
+          }
+  
+          if (watermarkText) {
+              doc.setGState(new doc.GState({ opacity: 0.1 })); // Apply transparency (0.1 = 10% opacity)
+              doc.setTextColor(...watermarkColor);
+              doc.setFontSize(80);
+              doc.setFont("helvetica", "bold");
+  
+              // Get center position for the watermark
+              const pageWidth = doc.internal.pageSize.getWidth();
+              const pageHeight = doc.internal.pageSize.getHeight();
+  
+              doc.text(watermarkText, pageWidth / 2, pageHeight / 2, {
+                  align: "center",
+                  angle: 45,
+              });
+  
+              doc.setGState(new doc.GState({ opacity: 1 })); // Restore full opacity
+          }
+  
+          // Generate and open the PDF
+          const pdfBlob = doc.output("blob");
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          setPdfUrl(pdfUrl);
+          setPdfDialogOpen(true);
+      } catch (error) {
+          console.error("Error generating PDF:", error);
+          alert("Failed to generate PDF. Please try again.");
       }
-  
-      const client = await response.json();
-  
-      // Create PDF Document
-      const doc = new jsPDF();
-  
-      // Business & Client Details
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("Invoice", 105, 15, { align: "center" });
-  
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-  
-      doc.text(`Issued by: ${user.business_name || "Your Business Name"}`, 20, 30);
-      doc.text(`Client: ${client.name || "Unknown"}`, 20, 40);
-      doc.text(`Business: ${client.business_name || "N/A"}`, 20, 50);
-      doc.text(`Email: ${client.email || "N/A"}`, 20, 60);
-      doc.text(`Address: ${client.address || "N/A"}`, 20, 70);
-      doc.text(`Tax Number: ${client.tax_number || "N/A"}`, 20, 80);
-  
-      // Invoice Details
-      doc.text(`Invoice #${invoice.invoice_number}`, 140, 30);
-      doc.text(`Issue Date: ${invoice.issue_date}`, 140, 40);
-      doc.text(`Due Date: ${invoice.due_date}`, 140, 50);
-      doc.text(`Currency: ${invoice.currency}`, 140, 60);
-      doc.text(`Total Amount: ${invoice.total_amount.toFixed(2)}`, 140, 70);
-      doc.text(`Payment Method: ${invoice.payment_method}`, 140, 80);
-  
-      // Invoice Items Table
-      autoTable(doc, {
-        startY: 100,
-        head: [["Type", "Description", "Quantity", "Unit", "Rate", "Discount", "Total"]],
-        body: invoice.items.map((item) => [
-          item.type,
-          item.description,
-          item.quantity,
-          item.unit,
-          item.rate.toFixed(2),
-          `${item.discount.toFixed(2)}%`,
-          (item.quantity * item.rate * (1 - item.discount / 100)).toFixed(2),
-        ]),
-        theme: "grid",
-        headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], halign: "center" },
-        columnStyles: {
-          2: { halign: "center" },
-          3: { halign: "center" },
-          4: { halign: "right" },
-          5: { halign: "right" },
-          6: { halign: "right" },
-        },
-      });
-  
-      // ✅ Apply Watermark (PAID or CANCELLED)
-      let watermarkText = "";
-      let watermarkColor = [];
-  
-      if (invoice.status === "Paid") {
-        watermarkText = "PAID";
-        watermarkColor = [0, 128, 0]; // Green
-      } else if (invoice.status === "Cancelled") {
-        watermarkText = "CANCELLED";
-        watermarkColor = [255, 0, 0]; // Red
-      }
-  
-      if (watermarkText) {
-        doc.setTextColor(...watermarkColor);
-        doc.setFontSize(80);
-        doc.setFont("helvetica", "bold");
-  
-        // Get center position for the watermark
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-  
-        doc.saveGraphicsState();  // Preserve current settings
-        doc.setGState(new doc.GState({ opacity: 0.2 })); // Apply transparency (20%)
-  
-        doc.text(watermarkText, pageWidth / 2, pageHeight / 2, {
-          align: "center",
-          angle: 45,
-        });
-  
-        doc.restoreGraphicsState(); // Restore settings
-      }
-  
-      // Generate and open the PDF
-      const pdfBlob = doc.output("blob");
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setPdfUrl(pdfUrl);
-      setPdfDialogOpen(true);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Please try again.");
-    }
   };
-  
   return (
     <>
       <TableContainer component={Paper} sx={{ height: 400, width: "100%", overflow: "auto" }}>
