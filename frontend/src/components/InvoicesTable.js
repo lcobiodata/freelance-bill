@@ -112,7 +112,9 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
   
           // Business details
           doc.setFont("helvetica", "bold");
+          doc.setFontSize(14); // Set font size to 16 (or any desired size)
           doc.text(user.business_name || "Your Business Name", 20, 30);
+          doc.setFontSize(12); // Revert font size back to 12 (or original size)
           doc.setFont("helvetica", "normal");
           doc.text("Your Registered Business Address", 20, 35); // Placeholder
           doc.text(`Email: ${user.email || "Your Email"}`, 20, 40);
@@ -151,6 +153,9 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
                   ["", "", "", "VAT (if applicable):", invoice.tax_amount.toFixed(2)],
                   ["", "", "", "Total Due:", invoice.total_amount.toFixed(2)],
               ],
+              headStyles: { fillColor: [105, 105, 105] }, // Dark grey color for header
+              bodyStyles: { fillColor: [211, 211, 211] }, // Light grey color for body
+              footStyles: { fillColor: [169, 169, 169], textColor: [0, 0, 0] }, // Grey color for footer with black text
           });
   
           // Payment details
