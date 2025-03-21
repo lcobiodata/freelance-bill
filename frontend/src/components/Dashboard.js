@@ -162,25 +162,7 @@ const Dashboard = () => {
   const { topLoyaltyClient, topRevenueClient } = findTopClients();
 
   return (
-    <Grid container spacing={3} sx={{ height: "100%" }}>
-      <Grid item xs={showProfile ? 3 : 1} sx={{ transition: "width 0.3s ease-in-out" }}>
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
-            <IconButton onClick={() => setShowProfile(!showProfile)}>
-              <Avatar>
-                <PersonIcon />
-              </Avatar>
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {showProfile && (
-          <Box sx={{ mt: 2 }}>
-            <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} />
-          </Box>
-        )}
-      </Grid>
-
+    <Grid container spacing={3} sx={{ height: "100%" }}>      
       <Grid item xs={showProfile ? 9 : 11} sx={{ transition: "width 0.3s ease-in-out" }}>
         <Container maxWidth="lg">
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 4 }}>
@@ -295,6 +277,23 @@ const Dashboard = () => {
             )}
           </Paper>
         </Container>
+      </Grid>
+      <Grid item xs={showProfile ? 3 : 1} sx={{ transition: "width 0.3s ease-in-out" }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
+            <IconButton onClick={() => setShowProfile(!showProfile)}>
+              <Avatar>
+                <PersonIcon />
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {showProfile && (
+          <Box sx={{ mt: 2 }}>
+            <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} />
+          </Box>
+        )}
       </Grid>
     </Grid>
   );
