@@ -33,8 +33,6 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
   const [localInvoices, setLocalInvoices] = useState(invoices); // Track status locally
   const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState(null);
 
   useEffect(() => {
     // Sort invoices numerically by invoice number
@@ -217,8 +215,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           // Generate and open the PDF
           const pdfBlob = doc.output("blob");
           const pdfUrl = URL.createObjectURL(pdfBlob);
-          setPdfUrl(pdfUrl);
-          setPdfDialogOpen(true);
+          window.open(pdfUrl, "_blank"); // Open the PDF in a new tab
       } catch (error) {
           console.error("Error generating PDF:", error);
           alert("Failed to generate PDF. Please try again.");
@@ -379,26 +376,6 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseItemsDialog} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* PDF Preview Dialog */}
-      <Dialog open={pdfDialogOpen} onClose={() => setPdfDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Invoice PDF Preview</DialogTitle>
-        <DialogContent>
-          {pdfUrl && <iframe src={pdfUrl} width="100%" height="500px" />}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            startIcon={<Download />}
-            variant="contained"
-            color="primary"
-            onClick={() => window.open(pdfUrl, "_blank")}
-          >
-            Download
-          </Button>
-          <Button onClick={() => setPdfDialogOpen(false)} color="secondary">
             Close
           </Button>
         </DialogActions>
