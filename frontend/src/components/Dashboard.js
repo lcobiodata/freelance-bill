@@ -171,7 +171,7 @@ const Dashboard = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 4 }}>
             <Box>
               <Typography variant="h4" gutterBottom>
-                Welcome, {user ? user.name : "User"}!
+                Welcome, <Typography component="span" variant="h4" fontWeight="bold">{user ? user.name : "User"}</Typography>!
               </Typography>
               <Typography variant="subtitle1" color="textSecondary">
                 Here is your dashboard overview. Manage your clients, invoices, and profile information.
