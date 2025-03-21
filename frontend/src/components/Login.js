@@ -67,7 +67,7 @@ const Login = () => {
       const res = await axios.post(`${API_URL}/login/google`, {
         token: idToken,
       });
-
+      // console.log(res.data);
       localStorage.setItem("token", res.data.token);
       setMessage(<Alert severity="success">Google login successful!</Alert>);
 
