@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton } from "@mui/material";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Import the Exit icon
+import LoginIcon from '@mui/icons-material/Login';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./components/Home";
@@ -52,15 +54,11 @@ const Navbar = () => {
           </>
         ) : (
           <>
-             {location.pathname !== "/login" && (
-              <Button color="inherit" component={Link} to="/login">
-                Login
-              </Button>
+            {location.pathname !== "/login" && (
+              <Button color="inherit" component={Link} to="/login" startIcon={<LoginIcon />}></Button>
             )}
             {location.pathname !== "/register" && (
-              <Button color="inherit" component={Link} to="/register">
-                Register
-              </Button>
+              <Button color="inherit" component={Link} to="/register" startIcon={<PersonAddIcon />}></Button>
             )}
           </>
         )}
