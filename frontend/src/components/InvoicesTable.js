@@ -100,14 +100,19 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           // Create PDF Document
           const doc = new jsPDF();
   
+          // Initial y-coordinate
+          let y = 20;
+  
           // Business & Client Details
           doc.setFont("helvetica", "bold");
           doc.setFontSize(24);
+          doc.text("INVOICE", 105, y, { align: "center" });
+          y += 10;
+  
           // Add a divider line
           doc.setLineWidth(0.5);
-          doc.line(20, 25, 190, 25);
-
-          doc.text("INVOICE", 105, 20, { align: "center" });
+          doc.line(20, y, 190, y);
+          y += 10;
   
           doc.setFontSize(12);
           doc.setFont("helvetica", "normal");
@@ -115,41 +120,55 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           // Business details
           doc.setFont("helvetica", "bold");
           doc.setFontSize(14); // Set font size to 14 (or any desired size)
-          doc.text(user.business_name || "Your Business Name", 20, 40); // Moved lower
+          doc.text(user.business_name || "Your Business Name", 20, y);
+          y += 5;
           doc.setFontSize(12); // Revert font size back to 12 (or original size)
           doc.setFont("helvetica", "normal");
-          doc.text("Your Registered Business Address", 20, 45); // Moved lower
-          doc.text(`Email: ${user.email || "Your Email"}`, 20, 50); // Moved lower
-          doc.text(`Phone: ${user.phone || "Your Phone Number"}`, 20, 55); // Moved lower
+          doc.text("Your Registered Business Address", 20, y);
+          y += 5;
+          doc.text(`Email: ${user.email || "Your Email"}`, 20, y);
+          y += 5;
+          doc.text(`Phone: ${user.phone || "Your Phone Number"}`, 20, y);
+          y += 5;
           if (user.website) {
-              doc.text(`Website: ${user.website}`, 20, 60); // Moved lower
+              doc.text(`Website: ${user.website}`, 20, y);
+              y += 5;
           }
-          
+  
           // Invoice details in the second column
+          let yRightColumn = 40; // Initial y-coordinate for the right column
           doc.setFont("helvetica", "bold");
-          doc.text("Invoice Number:", 130, 40); // Moved lower and to the left
+          doc.text("Invoice Number:", 130, yRightColumn);
           doc.setFont("helvetica", "normal");
-          doc.text(invoice.invoice_number, 170, 40); // Moved lower and to the left
-          
+          doc.text(invoice.invoice_number, 170, yRightColumn);
+          yRightColumn += 5;
+  
           doc.setFont("helvetica", "bold");
-          doc.text("Invoice Date:", 130, 45); // Moved lower and to the left
+          doc.text("Invoice Date:", 130, yRightColumn);
           doc.setFont("helvetica", "normal");
-          doc.text(invoice.issue_date, 170, 45); // Moved lower and to the left
-          
+          doc.text(invoice.issue_date, 170, yRightColumn);
+          yRightColumn += 5;
+  
           doc.setFont("helvetica", "bold");
-          doc.text("Payment Due By:", 130, 50); // Moved lower and to the left
+          doc.text("Payment Due By:", 130, yRightColumn);
           doc.setFont("helvetica", "normal");
-          doc.text(invoice.due_date, 170, 50); // Moved lower and to the left
+          doc.text(invoice.due_date, 170, yRightColumn);
+          yRightColumn += 5;
+  
           // Client details
+          y += 10; // Add some space before client details
           doc.setFont("helvetica", "bold");
-          doc.text("Invoice To:", 20, 65);
+          doc.text("Invoice To:", 20, y);
+          y += 5;
           doc.setFont("helvetica", "normal");
-          doc.text(client.name || "Client’s Name or Business Name", 20, 70);
-          doc.text(client.address || "Client’s Address", 20, 75);
+          doc.text(client.name || "Client’s Name or Business Name", 20, y);
+          y += 5;
+          doc.text(client.address || "Client’s Address", 20, y);
+          y += 5;
   
           // Table of items
           autoTable(doc, {
-              startY: 100,
+              startY: y + 10,
               head: [["Item", "Description", "Quantity", "Unit Price (£)", "Total (£)"]],
               body: invoice.items.map((item, index) => [
                   index + 1,
@@ -168,29 +187,43 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
               footStyles: { fillColor: [169, 169, 169], textColor: [0, 0, 0] }, // Grey color for footer with black text
           });
   
+          // Update y-coordinate after the table
+          y = doc.lastAutoTable.finalY + 20;
+  
           // Payment details
           doc.setFont("helvetica", "bold");
-          doc.text("Payment Details", 20, doc.lastAutoTable.finalY + 20);
+          doc.text("Payment Details", 20, y);
+          y += 5;
           doc.setFont("helvetica", "normal");
-          doc.text("Bank Name: Your Bank", 20, doc.lastAutoTable.finalY + 25); // Placeholder
-          doc.text("Account Name: Your Name / Business Name", 20, doc.lastAutoTable.finalY + 30); // Placeholder
-          doc.text("Sort Code: XX-XX-XX", 20, doc.lastAutoTable.finalY + 35); // Placeholder
-          doc.text("Account Number: XXXX XXXX", 20, doc.lastAutoTable.finalY + 40); // Placeholder
+          doc.text("Bank Name: Your Bank", 20, y); // Placeholder
+          y += 5;
+          doc.text("Account Name: Your Name / Business Name", 20, y); // Placeholder
+          y += 5;
+          doc.text("Sort Code: XX-XX-XX", 20, y); // Placeholder
+          y += 5;
+          doc.text("Account Number: XXXX XXXX", 20, y); // Placeholder
+          y += 10;
   
           doc.setFont("helvetica", "bold");
-          doc.text("Or Pay via PayPal / Stripe:", 20, doc.lastAutoTable.finalY + 50);
+          doc.text("Or Pay via PayPal / Stripe:", 20, y);
+          y += 5;
           doc.setFont("helvetica", "normal");
-          doc.text("Your Payment Link", 20, doc.lastAutoTable.finalY + 55); // Placeholder
+          doc.text("Your Payment Link", 20, y); // Placeholder
+          y += 10;
   
           // Legal notes
           doc.setFont("helvetica", "bold");
-          doc.text("Legal Notes", 20, doc.lastAutoTable.finalY + 65);
+          doc.text("Legal Notes", 20, y);
+          y += 5;
           doc.setFont("helvetica", "normal");
-          doc.text("If not VAT registered, include: “Not VAT Registered”.", 20, doc.lastAutoTable.finalY + 70);
-          doc.text("[Your Brand Name] is a registered trademark of [Your Name].", 20, doc.lastAutoTable.finalY + 75); // Placeholder
-          doc.text("Payment terms: Payment due within 14 days of invoice date.", 20, doc.lastAutoTable.finalY + 80);
+          doc.text("If not VAT registered, include: “Not VAT Registered”.", 20, y);
+          y += 5;
+          doc.text("[Your Brand Name] is a registered trademark of [Your Name].", 20, y); // Placeholder
+          y += 5;
+          doc.text("Payment terms: Payment due within 14 days of invoice date.", 20, y);
+          y += 10;
   
-          doc.text("Thank you for your business! Please contact us for any questions regarding this invoice.", 20, doc.lastAutoTable.finalY + 90);
+          doc.text("Thank you for your business! Please contact us for any questions regarding this invoice.", 20, y);
   
           // Apply watermark if needed
           let watermarkText = "";
@@ -233,6 +266,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           alert("Failed to generate PDF. Please try again.");
       }
   };
+
   return (
     <>
       <TableContainer component={Paper} sx={{ height: 400, width: "100%", overflow: "auto" }}>
