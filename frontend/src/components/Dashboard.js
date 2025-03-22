@@ -164,7 +164,7 @@ const Dashboard = () => {
   return (
     <Grid container spacing={3} sx={{ height: "100%" }}>      
       <Grid item xs={showProfile ? 9 : 11} sx={{ transition: "width 0.3s ease-in-out" }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 4 }}>
             <Box>
               <Typography variant="h4" gutterBottom>
@@ -290,8 +290,8 @@ const Dashboard = () => {
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
           <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
             <IconButton onClick={() => setShowProfile(!showProfile)}>
-              <Avatar>
-                <PersonIcon />
+              <Avatar sx={{ width: 48, height: 48 }}>
+                <PersonIcon fontSize="large" />
               </Avatar>
             </IconButton>
           </Tooltip>
