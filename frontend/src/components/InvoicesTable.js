@@ -242,7 +242,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
               doc.setTextColor(...watermarkColor);
               
               // Set font size as 90 if cancelled and 120 if paid
-              doc.setFontSize(watermarkText === "CANCELLED" ? 90 : 120);
+              doc.setFontSize(watermarkText === "CANCELLED" ? 80 : 160);
               doc.setFont("helvetica", "bold");
   
               // Get center position for the watermark
