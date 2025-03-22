@@ -11,6 +11,7 @@ import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton } from 
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Import the Exit icon
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./components/Home";
@@ -44,9 +45,7 @@ const Navbar = () => {
         {token ? (
           <>
             {location.pathname !== "/dashboard" && (
-              <Button color="inherit" component={Link} to="/dashboard">
-                Dashboard
-              </Button>
+              <Button color="inherit" component={Link} to="/dashboard" startIcon={<DashboardIcon />}></Button>
             )}
             <IconButton color="inherit" onClick={handleLogout}>
               <ExitToAppIcon />
