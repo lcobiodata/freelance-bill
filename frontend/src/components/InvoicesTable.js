@@ -102,7 +102,11 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
   
           // Business & Client Details
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(20);
+          doc.setFontSize(24);
+          // Add a divider line
+          doc.setLineWidth(0.5);
+          doc.line(20, 25, 190, 25);
+
           doc.text("INVOICE", 105, 20, { align: "center" });
   
           doc.setFontSize(12);
@@ -110,30 +114,38 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
   
           // Business details
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(14); // Set font size to 16 (or any desired size)
-          doc.text(user.business_name || "Your Business Name", 20, 30);
+          doc.setFontSize(14); // Set font size to 14 (or any desired size)
+          doc.text(user.business_name || "Your Business Name", 20, 40); // Moved lower
           doc.setFontSize(12); // Revert font size back to 12 (or original size)
           doc.setFont("helvetica", "normal");
-          doc.text("Your Registered Business Address", 20, 35); // Placeholder
-          doc.text(`Email: ${user.email || "Your Email"}`, 20, 40);
-          doc.text(`Phone: ${user.phone || "Your Phone Number"}`, 20, 45);
+          doc.text("Your Registered Business Address", 20, 45); // Moved lower
+          doc.text(`Email: ${user.email || "Your Email"}`, 20, 50); // Moved lower
+          doc.text(`Phone: ${user.phone || "Your Phone Number"}`, 20, 55); // Moved lower
           if (user.website) {
-              doc.text(`Website: ${user.website}`, 20, 50);
+              doc.text(`Website: ${user.website}`, 20, 60); // Moved lower
           }
+          
+          // Invoice details in the second column
           doc.setFont("helvetica", "bold");
-          doc.text(`Invoice Number: ${invoice.invoice_number}`, 20, 55);
-  
+          doc.text("Invoice Number:", 130, 40); // Moved lower and to the left
+          doc.setFont("helvetica", "normal");
+          doc.text(invoice.invoice_number, 170, 40); // Moved lower and to the left
+          
+          doc.setFont("helvetica", "bold");
+          doc.text("Invoice Date:", 130, 45); // Moved lower and to the left
+          doc.setFont("helvetica", "normal");
+          doc.text(invoice.issue_date, 170, 45); // Moved lower and to the left
+          
+          doc.setFont("helvetica", "bold");
+          doc.text("Payment Due By:", 130, 50); // Moved lower and to the left
+          doc.setFont("helvetica", "normal");
+          doc.text(invoice.due_date, 170, 50); // Moved lower and to the left
           // Client details
           doc.setFont("helvetica", "bold");
           doc.text("Invoice To:", 20, 65);
           doc.setFont("helvetica", "normal");
           doc.text(client.name || "Client’s Name or Business Name", 20, 70);
           doc.text(client.address || "Client’s Address", 20, 75);
-  
-          // Invoice dates
-          doc.setFont("helvetica", "bold");
-          doc.text(`Invoice Date: ${invoice.issue_date}`, 20, 85);
-          doc.text(`Payment Due By: ${invoice.due_date}`, 20, 90);
   
           // Table of items
           autoTable(doc, {
