@@ -287,9 +287,16 @@ const Dashboard = () => {
           alignItems: "flex-start" 
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4.5, position: "relative" }}>
           <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
-            <IconButton onClick={() => setShowProfile(!showProfile)}>
+            <IconButton
+              onClick={() => setShowProfile(!showProfile)}
+              sx={{
+                position: "absolute",
+                left: showProfile ? "-32px" : "0", // Adjust left position based on showProfile state
+                transition: "left 0.3s ease-in-out",
+              }}
+            >
               <Avatar sx={{ width: 48, height: 48 }}>
                 <PersonIcon fontSize="large" />
               </Avatar>
