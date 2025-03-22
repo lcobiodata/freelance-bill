@@ -293,11 +293,11 @@ const Dashboard = () => {
               onClick={() => setShowProfile(!showProfile)}
               sx={{
                 position: "absolute",
-                left: showProfile ? "-32px" : "0", // Adjust left position based on showProfile state
+                left: showProfile ? "-38px" : "0", // Adjust left position based on showProfile state
                 transition: "left 0.3s ease-in-out",
               }}
             >
-              <Avatar sx={{ width: 48, height: 48 }}>
+              <Avatar sx={{ width: 60, height: 60 }}>
                 <PersonIcon fontSize="large" />
               </Avatar>
             </IconButton>
