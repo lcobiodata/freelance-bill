@@ -17,7 +17,7 @@ import {
   IconButton
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { Add, Check, Close, Visibility, Print, Download } from "@mui/icons-material";
+import { Add, Check, Close, Visibility, Print } from "@mui/icons-material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
