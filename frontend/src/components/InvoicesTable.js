@@ -138,21 +138,21 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           // Invoice details in the second column
           let yRightColumn = 40; // Initial y-coordinate for the right column
           doc.setFont("helvetica", "bold");
-          doc.text("Invoice Number:", 130, yRightColumn);
+          doc.text("Invoice Number:", 129, yRightColumn);
           doc.setFont("helvetica", "normal");
-          doc.text(invoice.invoice_number, 170, yRightColumn);
+          doc.text(invoice.invoice_number, 169, yRightColumn);
           yRightColumn += 5;
   
           doc.setFont("helvetica", "bold");
-          doc.text("Invoice Date:", 130, yRightColumn);
+          doc.text("Invoice Date:", 129, yRightColumn);
           doc.setFont("helvetica", "normal");
-          doc.text(invoice.issue_date, 170, yRightColumn);
+          doc.text(invoice.issue_date, 169, yRightColumn);
           yRightColumn += 5;
   
           doc.setFont("helvetica", "bold");
-          doc.text("Payment Due By:", 130, yRightColumn);
+          doc.text("Payment Due By:", 129, yRightColumn);
           doc.setFont("helvetica", "normal");
-          doc.text(invoice.due_date, 170, yRightColumn);
+          doc.text(invoice.due_date, 169, yRightColumn);
           yRightColumn += 5;
   
           // Client details
