@@ -7,6 +7,7 @@ import { InvoicesTable } from "./InvoicesTable";
 import { ProfileCard } from "./ProfileCard"; 
 import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
 import TopClientRevenueCard from "./TopClientRevenueCard";
+import { fetchUserDetails, updateUserDetails } from "../App";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -19,13 +20,13 @@ const Dashboard = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
-  const [showProfile, setShowProfile] = useState(false); // ✅ State for collapsibility
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     if (token) {
       fetchClients();
       fetchInvoices();
-      fetchUserDetails();
+      fetchUserDetails(setUser, setLoadingUser);
     }
   }, [token]);
 
@@ -55,35 +56,6 @@ const Dashboard = () => {
       setClients([]);
     }
     setLoadingClients(false);
-  };
-
-  const fetchUserDetails = async () => {
-    setLoadingUser(true);
-    try {
-      const response = await fetch(`${API_URL}/user`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error(response.statusText);
-      setUser(await response.json());
-    } catch {
-      setUser(null);
-    }
-    setLoadingUser(false);
-  };
-
-  const updateUserDetails = async (updatedData) => {
-    try {
-      const response = await fetch(`${API_URL}/user`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(updatedData),
-      });
-
-      if (!response.ok) throw new Error("Failed to update user details");
-      fetchUserDetails();
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   const markAsPaid = async (invoiceId) => {
@@ -238,7 +210,6 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </Grid>
-            {/* ✅ Place "Top Client" cards within the same Grid layout */}
             <Grid item xs={12} sm={4}>
               <TopClientLoyaltyCard client={topLoyaltyClient} />
             </Grid>

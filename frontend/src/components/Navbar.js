@@ -1,15 +1,24 @@
-import React from "react";
-import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, Box } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { AppBar, Toolbar, Typography, Button, IconButton, Avatar } from "@mui/material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import { fetchUserDetails } from "../App";
 
-const Navbar = ({ user, loadingUser }) => {
+const Navbar = () => {
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (token) {
+      fetchUserDetails(setUser, setLoadingUser);
+    }
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");

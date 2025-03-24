@@ -25,16 +25,25 @@ const clearTokenOnLoad = () => {
 
 export const fetchUserDetails = async (setUser, setLoadingUser) => {
   const token = localStorage.getItem("token");
-  if (!token) return;
+  if (!token) {
+    console.log("No token found in localStorage");
+    return;
+  }
 
   setLoadingUser(true);
   try {
     const response = await fetch(`${API_URL}/user`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!response.ok) throw new Error(response.statusText);
-    setUser(await response.json());
-  } catch {
+    if (!response.ok) {
+      console.error("Failed to fetch user details:", response.statusText);
+      throw new Error(response.statusText);
+    }
+    const userData = await response.json();
+    console.log("Fetched user details:", userData);
+    setUser(userData);
+  } catch (error) {
+    console.error("Error fetching user details:", error);
     setUser(null);
   }
   setLoadingUser(false);
