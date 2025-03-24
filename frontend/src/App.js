@@ -3,15 +3,8 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Link,
-  useNavigate,
-  useLocation,
 } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton } from "@mui/material";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Import the Exit icon
-import LoginIcon from '@mui/icons-material/Login';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import { Container } from "@mui/material";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Home from "./components/Home";
@@ -21,49 +14,11 @@ import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 import CreateInvoice from "./components/CreateInvoice";
 import AddClient from "./components/AddClient";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 const clearTokenOnLoad = () => {
   localStorage.removeItem("token");
-};
-
-const Navbar = () => {
-  const token = localStorage.getItem("token");
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
-  return (
-    <AppBar position="static" color="primary" sx={{ boxShadow: 3 }}>
-      <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          FreelanceBill
-        </Typography>
-        {token ? (
-          <>
-            {location.pathname !== "/dashboard" && (
-              <Button color="inherit" component={Link} to="/dashboard" startIcon={<DashboardIcon />}></Button>
-            )}
-            <IconButton color="inherit" onClick={handleLogout}>
-              <ExitToAppIcon />
-            </IconButton>
-          </>
-        ) : (
-          <>
-            {location.pathname !== "/login" && (
-              <Button color="inherit" component={Link} to="/login" startIcon={<LoginIcon />}></Button>
-            )}
-            {location.pathname !== "/register" && (
-              <Button color="inherit" component={Link} to="/register" startIcon={<PersonAddIcon />}></Button>
-            )}
-          </>
-        )}
-      </Toolbar>
-    </AppBar>
-  );
 };
 
 const App = () => {
@@ -91,22 +46,5 @@ const App = () => {
     </Router>
   );
 };
-
-const Footer = () => (
-  <Box
-    component="footer"
-    sx={{
-      textAlign: "center",
-      py: 2,
-      mt: 4,
-      bgcolor: "primary.main",
-      color: "white",
-    }}
-  >
-    <Typography variant="body2">
-      © {new Date().getFullYear()} FreelanceBill. All rights reserved.
-    </Typography>
-  </Box>
-);
 
 export default App;
