@@ -1,12 +1,12 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, Button, IconButton } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, Box } from "@mui/material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 
-const Navbar = () => {
+const Navbar = ({ user, loadingUser }) => {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const location = useLocation();
@@ -14,6 +14,11 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  const getUserInitial = () => {
+    if (!user) return "";
+    return user.name.charAt(0).toUpperCase();
   };
 
   return (
@@ -30,6 +35,7 @@ const Navbar = () => {
             <IconButton color="inherit" onClick={handleLogout}>
               <ExitToAppIcon />
             </IconButton>
+            <Avatar sx={{ mx: 2 }}>{getUserInitial()}</Avatar>
           </>
         ) : (
           <>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -17,24 +17,65 @@ import AddClient from "./components/AddClient";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const clearTokenOnLoad = () => {
   localStorage.removeItem("token");
 };
 
+export const fetchUserDetails = async (setUser, setLoadingUser) => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  setLoadingUser(true);
+  try {
+    const response = await fetch(`${API_URL}/user`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error(response.statusText);
+    setUser(await response.json());
+  } catch {
+    setUser(null);
+  }
+  setLoadingUser(false);
+};
+
+export const updateUserDetails = async (updatedData, fetchUserDetails) => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const response = await fetch(`${API_URL}/user`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(updatedData),
+    });
+
+    if (!response.ok) throw new Error("Failed to update user details");
+    fetchUserDetails();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 const App = () => {
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
   useEffect(() => {
     clearTokenOnLoad();
+    fetchUserDetails(setUser, setLoadingUser);
   }, []);
 
   return (
     <Router>
-      <Navbar />
+      <Navbar user={user} loadingUser={loadingUser} />
       <Container maxWidth={false} sx={{ py: 4, display: "inline-block" }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard user={user} loadingUser={loadingUser} updateUserDetails={(data) => updateUserDetails(data, () => fetchUserDetails(setUser, setLoadingUser))} />} />
           <Route path="/verify-success" element={<EmailVerificationSuccess />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
