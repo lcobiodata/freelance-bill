@@ -278,8 +278,8 @@ const InvoiceForm = () => {
         </IconButton>
       </Box>
   
-      {/* <Paper elevation={3} sx={{ flexGrow: 1, p: 4 }}> */}
-      <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
+      <Paper elevation={3} sx={{ flexGrow: 1, p: 4 }}>
+      {/* <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}> */}
         <Typography variant="h5" gutterBottom>
           Create Invoice
         </Typography>

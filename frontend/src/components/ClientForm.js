@@ -89,7 +89,8 @@ const ClientForm = () => {
           <ArrowBack fontSize="large" />
         </IconButton>
       </Box>
-      <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
+      {/* <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}> */}
+      <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom>
           Add New Client
         </Typography>
