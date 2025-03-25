@@ -106,7 +106,7 @@ const Dashboard = () => {
   };
 
   const countPendingInvoices = () => {
-    return invoices.filter((invoice) => !invoice.paid).length;
+    return invoices.filter((invoice) => invoice.status !== "Paid" && invoice.status !== "Cancelled").length;
   };
 
   const findTopClients = () => {
