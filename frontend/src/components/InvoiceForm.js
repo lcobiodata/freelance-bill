@@ -29,7 +29,7 @@ import InvoiceSummary from "./InvoiceSummary"; // Import InvoiceSummary componen
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const CreateInvoice = () => {
+const InvoiceForm = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -462,4 +462,4 @@ const CreateInvoice = () => {
   );
 };
 
-export default CreateInvoice;
+export default InvoiceForm;

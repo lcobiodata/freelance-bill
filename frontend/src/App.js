@@ -12,7 +12,7 @@ import Dashboard from "./components/Dashboard";
 import EmailVerificationSuccess from "./components/EmailVerificationSuccess";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
-import CreateInvoice from "./components/CreateInvoice";
+import InvoiceForm from "./components/InvoiceForm";
 import AddClient from "./components/AddClient";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -88,7 +88,7 @@ const App = () => {
           <Route path="/verify-success" element={<EmailVerificationSuccess />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/create-invoice" element={<CreateInvoice />} />
+          <Route path="/create-invoice" element={<InvoiceForm />} />
           <Route path="/add-client" element={<AddClient />} />
         </Routes>
       </Container>
