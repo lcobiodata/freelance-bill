@@ -21,9 +21,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
 } from "@mui/material";
-import { Edit, Delete, Add } from "@mui/icons-material"; // Import icons
+import { Edit, Delete, Add, ArrowBack } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import InvoiceSummary from "./InvoiceSummary"; // Import InvoiceSummary component
 
@@ -268,17 +268,29 @@ const InvoiceForm = () => {
 
   return (
     <Container maxWidth="md">
-      <Paper elevation={3} sx={{ p: 4, mt: 5 }}>
-        <Typography variant="h5" gutterBottom>Create Invoice</Typography>
-
-        {message && <Box sx={{ my: 2 }}>{message}</Box>}
-
-        {isRedirecting ? (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-            <CircularProgress size={40} />
-          </Box>
-        ) : (
-          <>
+      <Box sx={{ display: "flex", alignItems: "flex-start", mt: 4 }}>
+        <IconButton
+          onClick={() => navigate("/dashboard")}
+          sx={{ mr: 2, mt: 1 }}
+          aria-label="Back to Dashboard"
+        >
+          <ArrowBack fontSize="large" />
+        </IconButton>
+      </Box>
+  
+        <Paper elevation={3} sx={{ flexGrow: 1, p: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Create Invoice
+          </Typography>
+  
+          {message && <Box sx={{ my: 2 }}>{message}</Box>}
+  
+          {isRedirecting ? (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+              <CircularProgress size={40} />
+            </Box>
+          ) : (
+            <>
             <TextField
               select
               label="Select Client *"
