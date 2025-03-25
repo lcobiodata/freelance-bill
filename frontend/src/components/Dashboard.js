@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent, Button, IconButton, Avatar, Tooltip } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
+import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
-import { ProfileCard } from "./ProfileCard"; 
 import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
 import TopClientRevenueCard from "./TopClientRevenueCard";
 import { fetchUserDetails, updateUserDetails } from "../App";
@@ -20,7 +18,6 @@ const Dashboard = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
-  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -135,7 +132,7 @@ const Dashboard = () => {
 
   return (
     <Grid container spacing={3} sx={{ height: "100%" }}>      
-      <Grid item xs={showProfile ? 9 : 11} sx={{ transition: "width 0.3s ease-in-out" }}>
+      <Grid item xs={12} sx={{ transition: "width 0.3s ease-in-out" }}>
         <Container maxWidth="xl">
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 4 }}>
             <Box>
@@ -248,38 +245,6 @@ const Dashboard = () => {
             )}
           </Paper>
         </Container>
-      </Grid>
-      <Grid item xs={showProfile ? 3 : "auto"} 
-        sx={{ 
-          transition: "width 0.3s ease-in-out", 
-          minWidth: showProfile ? "inherit" : "50px", 
-          display: "flex", 
-          justifyContent: "flex-end", 
-          alignItems: "flex-start" 
-        }}
-      >
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4.5, position: "relative" }}>
-          <Tooltip title={showProfile ? "Hide Profile" : "Show Profile"}>
-            <IconButton
-              onClick={() => setShowProfile(!showProfile)}
-              sx={{
-                position: "absolute",
-                left: showProfile ? "-38px" : "0", // Adjust left position based on showProfile state
-                transition: "left 0.3s ease-in-out",
-              }}
-            >
-              <Avatar sx={{ width: 60, height: 60 }}>
-                <PersonIcon fontSize="large" />
-              </Avatar>
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {showProfile && (
-          <Box sx={{ mt: 2 }}>
-            <ProfileCard user={user} loading={loadingUser} updateUser={updateUserDetails} />
-          </Box>
-        )}
       </Grid>
     </Grid>
   );
