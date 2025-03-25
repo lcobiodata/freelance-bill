@@ -46,7 +46,7 @@ const Navbar = () => {
   return (
     <AppBar position="static" color="primary" sx={{ boxShadow: 3 }}>
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
           FreelanceBill
         </Typography>
         {token ? (
@@ -74,9 +74,7 @@ const Navbar = () => {
                 horizontal: 'right',
               }}
             >
-              {/* <Box sx={{ p: 2 }}> */}
-                <ProfileCard user={user} loading={loadingUser} />
-              {/* </Box> */}
+              <ProfileCard user={user} loading={loadingUser} />
             </Popover>
           </>
         ) : (
