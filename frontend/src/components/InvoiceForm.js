@@ -278,172 +278,173 @@ const InvoiceForm = () => {
         </IconButton>
       </Box>
   
-        <Paper elevation={3} sx={{ flexGrow: 1, p: 4 }}>
-          <Typography variant="h5" gutterBottom>
-            Create Invoice
-          </Typography>
-  
-          {message && <Box sx={{ my: 2 }}>{message}</Box>}
-  
-          {isRedirecting ? (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-              <CircularProgress size={40} />
-            </Box>
-          ) : (
-            <>
-            <TextField
-              select
-              label="Select Client *"
-              name="client_id"
-              fullWidth
-              margin="normal"
-              value={invoice.client_id}
-              onChange={handleChange}
-              error={!!errors.client_id}
-              helperText={errors.client_id}
-            >
-              <MenuItem value="new">
-                <Add /> New client
+      {/* <Paper elevation={3} sx={{ flexGrow: 1, p: 4 }}> */}
+      <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
+        <Typography variant="h5" gutterBottom>
+          Create Invoice
+        </Typography>
+
+        {message && <Box sx={{ my: 2 }}>{message}</Box>}
+
+        {isRedirecting ? (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+            <CircularProgress size={40} />
+          </Box>
+        ) : (
+          <>
+          <TextField
+            select
+            label="Select Client *"
+            name="client_id"
+            fullWidth
+            margin="normal"
+            value={invoice.client_id}
+            onChange={handleChange}
+            error={!!errors.client_id}
+            helperText={errors.client_id}
+          >
+            <MenuItem value="new">
+              <Add /> New client
+            </MenuItem>
+            {clients.map((client) => (
+              <MenuItem key={client.id} value={client.id}>
+                {client.name}
               </MenuItem>
-              {clients.map((client) => (
-                <MenuItem key={client.id} value={client.id}>
-                  {client.name}
-                </MenuItem>
-              ))}
-            </TextField>
+            ))}
+          </TextField>
 
-            <TextField label="Issue Date *" type="date" name="issue_date" fullWidth margin="normal"
-              onChange={handleChange} InputLabelProps={{ shrink: true }}
-              error={!!errors.issue_date} helperText={errors.issue_date}
-            />
-            <TextField label="Due Date *" type="date" name="due_date" fullWidth margin="normal"
-              onChange={handleChange} InputLabelProps={{ shrink: true }}
-              error={!!errors.due_date} helperText={errors.due_date}
-            />
-            <TextField label="Currency *" select name="currency" fullWidth margin="normal"
-              value={invoice.currency} onChange={handleChange}
-              error={!!errors.currency} helperText={errors.currency}
-            >
-              <MenuItem value="USD">USD</MenuItem>
-              <MenuItem value="EUR">EUR</MenuItem>
-              <MenuItem value="GBP">GBP</MenuItem>
-              {/* Add more currencies as needed */}
-            </TextField>
-            <TextField label="Tax (%)" type="number" name="tax_rate" fullWidth margin="normal"
-              value={invoice.tax_rate} onChange={handleChange} inputProps={{ min: 0, max: 100 }} error={!!errors.tax_rate} helperText={errors.tax_rate} />
+          <TextField label="Issue Date *" type="date" name="issue_date" fullWidth margin="normal"
+            onChange={handleChange} InputLabelProps={{ shrink: true }}
+            error={!!errors.issue_date} helperText={errors.issue_date}
+          />
+          <TextField label="Due Date *" type="date" name="due_date" fullWidth margin="normal"
+            onChange={handleChange} InputLabelProps={{ shrink: true }}
+            error={!!errors.due_date} helperText={errors.due_date}
+          />
+          <TextField label="Currency *" select name="currency" fullWidth margin="normal"
+            value={invoice.currency} onChange={handleChange}
+            error={!!errors.currency} helperText={errors.currency}
+          >
+            <MenuItem value="USD">USD</MenuItem>
+            <MenuItem value="EUR">EUR</MenuItem>
+            <MenuItem value="GBP">GBP</MenuItem>
+            {/* Add more currencies as needed */}
+          </TextField>
+          <TextField label="Tax (%)" type="number" name="tax_rate" fullWidth margin="normal"
+            value={invoice.tax_rate} onChange={handleChange} inputProps={{ min: 0, max: 100 }} error={!!errors.tax_rate} helperText={errors.tax_rate} />
 
-            <TextField select label="Payment Method *" name="payment_method" fullWidth margin="normal"
-              value={invoice.payment_method} onChange={handleChange}
-              error={!!errors.payment_method} helperText={errors.payment_method}
-            >
-              <MenuItem value="Cash">Cash</MenuItem>
-              <MenuItem value="Credit Card">Credit Card</MenuItem>
-              <MenuItem value="PayPal">PayPal</MenuItem>
-              <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
-            </TextField>
-            <TextField
-              label="Payment Details *"
-              name="payment_details"
-              fullWidth
-              margin="normal"
-              value={invoice.payment_details}
-              onChange={handleChange}
-              error={!!errors.payment_details}
-              helperText={errors.payment_details}
-              multiline  // ➕ Enables multi-line input
-              rows={4}   // ➕ Adjust the number of visible rows
-            />
-            <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
+          <TextField select label="Payment Method *" name="payment_method" fullWidth margin="normal"
+            value={invoice.payment_method} onChange={handleChange}
+            error={!!errors.payment_method} helperText={errors.payment_method}
+          >
+            <MenuItem value="Cash">Cash</MenuItem>
+            <MenuItem value="Credit Card">Credit Card</MenuItem>
+            <MenuItem value="PayPal">PayPal</MenuItem>
+            <MenuItem value="Bank Transfer">Bank Transfer</MenuItem>
+          </TextField>
+          <TextField
+            label="Payment Details *"
+            name="payment_details"
+            fullWidth
+            margin="normal"
+            value={invoice.payment_details}
+            onChange={handleChange}
+            error={!!errors.payment_details}
+            helperText={errors.payment_details}
+            multiline  // ➕ Enables multi-line input
+            rows={4}   // ➕ Adjust the number of visible rows
+          />
+          <Typography variant="h6" sx={{ mt: 3 }}>Invoice Items</Typography>
 
-            {errors.items && <Alert severity="error">{errors.items}</Alert>}
+          {errors.items && <Alert severity="error">{errors.items}</Alert>}
 
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Quantity</TableCell>
-                    <TableCell>Unit</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Price/Rate</TableCell>
-                    <TableCell>Discount (%)</TableCell>
-                    <TableCell>Gross</TableCell>
-                    <TableCell>Net</TableCell>
-                    <TableCell>Actions</TableCell>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Quantity</TableCell>
+                  <TableCell>Unit</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Price/Rate</TableCell>
+                  <TableCell>Discount (%)</TableCell>
+                  <TableCell>Gross</TableCell>
+                  <TableCell>Net</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {invoice.items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.type}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{item.unit}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                    <TableCell>{item.rate}</TableCell>
+                    <TableCell>{item.discount}</TableCell>
+                    <TableCell>{item.grossAmount !== undefined ? Number(item.grossAmount).toFixed(2) : "N/A"}</TableCell>
+                    <TableCell>{item.netAmount !== undefined ? Number(item.netAmount).toFixed(2) : "N/A"}</TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => editItem(index)} color="primary">
+                        <Edit />
+                      </IconButton>
+                      <IconButton onClick={() => deleteItem(index)} color="error">
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {invoice.items.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.type}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell>{item.description}</TableCell>
-                      <TableCell>{item.rate}</TableCell>
-                      <TableCell>{item.discount}</TableCell>
-                      <TableCell>{item.grossAmount !== undefined ? Number(item.grossAmount).toFixed(2) : "N/A"}</TableCell>
-                      <TableCell>{item.netAmount !== undefined ? Number(item.netAmount).toFixed(2) : "N/A"}</TableCell>
-                      <TableCell>
-                        <IconButton onClick={() => editItem(index)} color="primary">
-                          <Edit />
-                        </IconButton>
-                        <IconButton onClick={() => deleteItem(index)} color="error">
-                          <Delete />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TextField
-              select
-              label="Type *"
-              name="type"
-              fullWidth
-              margin="normal"
-              value={newItem.type}
-              onChange={handleItemChange}
-              error={!!errors.type}
-              helperText={errors.type}
-            >
-              <MenuItem value="Product">Product</MenuItem>
-              <MenuItem value="Service">Service</MenuItem>
-            </TextField>
-            <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
-            <TextField
-              select
-              label="Unit *"
-              name="unit"
-              fullWidth
-              margin="normal"
-              value={newItem.unit}
-              onChange={handleItemChange}
-              error={!!errors.unit}
-              helperText={errors.unit}
-            >
-              <MenuItem value="Item">Item</MenuItem>
-              <MenuItem value="Hour">Hour</MenuItem>
-            </TextField>
-            <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
-            <TextField label="Price/Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
-            <TextField label="Discount (%)" type="number" name="discount" fullWidth margin="normal" value={newItem.discount} onChange={handleItemChange} inputProps={{ min: 0, max: 100 }} error={!!errors.discount} helperText={errors.discount} />
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TextField
+            select
+            label="Type *"
+            name="type"
+            fullWidth
+            margin="normal"
+            value={newItem.type}
+            onChange={handleItemChange}
+            error={!!errors.type}
+            helperText={errors.type}
+          >
+            <MenuItem value="Product">Product</MenuItem>
+            <MenuItem value="Service">Service</MenuItem>
+          </TextField>
+          <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
+          <TextField
+            select
+            label="Unit *"
+            name="unit"
+            fullWidth
+            margin="normal"
+            value={newItem.unit}
+            onChange={handleItemChange}
+            error={!!errors.unit}
+            helperText={errors.unit}
+          >
+            <MenuItem value="Item">Item</MenuItem>
+            <MenuItem value="Hour">Hour</MenuItem>
+          </TextField>
+          <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
+          <TextField label="Price/Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
+          <TextField label="Discount (%)" type="number" name="discount" fullWidth margin="normal" value={newItem.discount} onChange={handleItemChange} inputProps={{ min: 0, max: 100 }} error={!!errors.discount} helperText={errors.discount} />
 
-            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
-              <Button variant="contained" color="primary" onClick={saveItem}>
-                {editIndex !== null ? "Update Item" : "Add Item"}
-              </Button>
-            </Box>
+          <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+            <Button variant="contained" color="primary" onClick={saveItem}>
+              {editIndex !== null ? "Update Item" : "Add Item"}
+            </Button>
+          </Box>
 
-            {/* ✅ Checkbox for confirmation */}
-            <FormControlLabel
-              control={<Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} />}
-              label="I hereby confirm that all the information provided is correct and true."
-              sx={{ mt: 3 }}
-            />
-            <InvoiceSummary invoice={invoice} isConfirmed={isConfirmed} handleSubmit={handleSubmit} />
-          </>
-        )}
+          {/* ✅ Checkbox for confirmation */}
+          <FormControlLabel
+            control={<Checkbox checked={isConfirmed} onChange={(e) => setIsConfirmed(e.target.checked)} />}
+            label="I hereby confirm that all the information provided is correct and true."
+            sx={{ mt: 3 }}
+          />
+          <InvoiceSummary invoice={invoice} isConfirmed={isConfirmed} handleSubmit={handleSubmit} />
+        </>
+      )}
       </Paper>
 
       {/* Add Client Dialog */}

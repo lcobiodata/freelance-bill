@@ -7,8 +7,10 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Box
+  Box,
+  IconButton,
 } from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -78,6 +80,15 @@ const ClientForm = () => {
 
   return (
     <Container maxWidth="sm">
+      <Box sx={{ display: "flex", alignItems: "flex-start", mt: 4 }}>
+        <IconButton
+          onClick={() => navigate("/dashboard")}
+          sx={{ mr: 2, mt: 1 }}
+          aria-label="Back to Dashboard"
+        >
+          <ArrowBack fontSize="large" />
+        </IconButton>
+      </Box>
       <Paper elevation={3} sx={{ p: 4, mt: 5, textAlign: "center" }}>
         <Typography variant="h5" gutterBottom>
           Add New Client
