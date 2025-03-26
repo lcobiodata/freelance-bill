@@ -221,7 +221,7 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           doc.text("Legal Notes", 20, y);
           y += 5;
           doc.setFont("helvetica", "normal");
-          doc.text("If not VAT registered, include: “Not VAT Registered”.", 20, y);
+          doc.text(invoice.tax_rate !== 0 ? `VAT: ${invoice.tax_rate}%` : "Not VAT Registered", 20, y);
           y += 5;
           doc.text("[Your Brand Name] is a registered trademark of [Your Name].", 20, y); // Placeholder
           y += 5;
