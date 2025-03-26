@@ -169,18 +169,23 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           // Table of items
           autoTable(doc, {
               startY: y + 10,
-              head: [["Item", "Description", "Quantity", "Unit Price (£)", "Total (£)"]],
+              head: [["Item", "Type", "Unit", "Description", "Quantity", "Unit Price (£)", "Gross Amount (£)", "Discount (%)", "Net Amount (£)"]],
               body: invoice.items.map((item, index) => [
                   index + 1,
+                  item.type,
+                  item.unit,
                   item.description,
                   item.quantity,
                   item.rate.toFixed(2),
-                  (item.quantity * item.rate * (1 - item.discount / 100)).toFixed(2),
+                  item.gross_amount.toFixed(2),
+                  item.discount,
+                  item.net_amount.toFixed(2),
               ]),
               foot: [
-                  ["", "", "", "Subtotal:", invoice.subtotal.toFixed(2)],
-                  ["", "", "", "VAT (if applicable):", invoice.tax_amount.toFixed(2)],
-                  ["", "", "", "Total Due:", invoice.total_amount.toFixed(2)],
+                  ["", "", "", "", "", "", "", "Subtotal:", invoice.subtotal.toFixed(2)],
+                  ["", "", "", "", "", "", "", "Total Discount:", invoice.total_discount.toFixed(2)],
+                  ["", "", "", "", "", "", "", "VAT (if applicable):", invoice.tax_amount.toFixed(2)],
+                  ["", "", "", "", "", "", "", "Total Due:", invoice.total_amount.toFixed(2)],
               ],
               headStyles: { fillColor: [105, 105, 105] }, // Dark grey color for header
               bodyStyles: { fillColor: [211, 211, 211] }, // Light grey color for body
