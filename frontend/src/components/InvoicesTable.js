@@ -169,12 +169,12 @@ export const InvoicesTable = ({ invoices, loading, markAsPaid, markAsCancelled, 
           // Table of items
           autoTable(doc, {
               startY: y + 10,
-              head: [["Item", "Type", "Unit", "Description", "Quantity", "Unit Price (£)", "Gross Amount (£)", "Discount (%)", "Net Amount (£)"]],
+              head: [["Item", "Type", "Description", "Unit", "Quantity", "Unit Price (£)", "Gross Amount (£)", "Discount (%)", "Net Amount (£)"]],
               body: invoice.items.map((item, index) => [
                   index + 1,
                   item.type,
-                  item.unit,
                   item.description,
+                  item.unit,
                   item.quantity,
                   item.rate.toFixed(2),
                   item.gross_amount.toFixed(2),
