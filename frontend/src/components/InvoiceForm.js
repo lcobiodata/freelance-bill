@@ -363,9 +363,9 @@ const InvoiceForm = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Type</TableCell>
-                  <TableCell>Quantity</TableCell>
                   <TableCell>Unit</TableCell>
                   <TableCell>Description</TableCell>
+                  <TableCell>Quantity</TableCell>
                   <TableCell>Price/Rate</TableCell>
                   <TableCell>Discount (%)</TableCell>
                   <TableCell>Gross</TableCell>
@@ -377,9 +377,9 @@ const InvoiceForm = () => {
                 {invoice.items.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>{item.type}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
                     <TableCell>{item.unit}</TableCell>
                     <TableCell>{item.description}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
                     <TableCell>{item.rate}</TableCell>
                     <TableCell>{item.discount}</TableCell>
                     <TableCell>{item.grossAmount !== undefined ? Number(item.grossAmount).toFixed(2) : "N/A"}</TableCell>
@@ -411,7 +411,6 @@ const InvoiceForm = () => {
             <MenuItem value="Product">Product</MenuItem>
             <MenuItem value="Service">Service</MenuItem>
           </TextField>
-          <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
           <TextField
             select
             label="Unit *"
@@ -427,6 +426,7 @@ const InvoiceForm = () => {
             <MenuItem value="Hour">Hour</MenuItem>
           </TextField>
           <TextField label="Description *" name="description" fullWidth margin="normal" value={newItem.description} onChange={handleItemChange} error={!!errors.description} helperText={errors.description} />
+          <TextField label="Quantity *" type="number" name="quantity" fullWidth margin="normal" value={newItem.quantity} onChange={handleItemChange} error={!!errors.quantity} helperText={errors.quantity} />
           <TextField label="Price/Rate *" type="number" name="rate" fullWidth margin="normal" value={newItem.rate} onChange={handleItemChange} error={!!errors.rate} helperText={errors.rate} />
           <TextField label="Discount (%)" type="number" name="discount" fullWidth margin="normal" value={newItem.discount} onChange={handleItemChange} inputProps={{ min: 0, max: 100 }} error={!!errors.discount} helperText={errors.discount} />
 
