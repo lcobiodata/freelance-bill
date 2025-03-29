@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, Box, Popover, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, Box, Popover, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, Alert } from "@mui/material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import LoginIcon from '@mui/icons-material/Login';
@@ -13,6 +13,7 @@ const Navbar = () => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null); // State for Popover anchor
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false); // State for logout confirmation dialog
+  const [snackbarOpen, setSnackbarOpen] = useState(false); // State for Snackbar
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,7 +26,10 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    setSnackbarOpen(true); // Show the Snackbar
+    setTimeout(() => {
+      navigate("/login"); // Redirect to login after showing the message
+    }, 2000); // Delay for 2 seconds
   };
 
   const handleLogoutClick = () => {
@@ -39,6 +43,10 @@ const Navbar = () => {
 
   const handleLogoutCancel = () => {
     setLogoutDialogOpen(false); // Close the dialog without logging out
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false); // Close the Snackbar
   };
 
   const getUserInitial = () => {
@@ -127,6 +135,18 @@ const Navbar = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for Logout Message */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity="info" sx={{ width: '100%' }}>
+          See you soon, bye!
+        </Alert>
+      </Snackbar>
     </>
   );
 };
