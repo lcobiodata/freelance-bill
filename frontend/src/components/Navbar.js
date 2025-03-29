@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, Box, Popover } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, IconButton, Avatar, Box, Popover, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import LoginIcon from '@mui/icons-material/Login';
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null); // State for Popover anchor
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false); // State for logout confirmation dialog
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,6 +26,19 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true); // Open the confirmation dialog
+  };
+
+  const handleLogoutConfirm = () => {
+    setLogoutDialogOpen(false); // Close the dialog
+    handleLogout(); // Perform logout
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutDialogOpen(false); // Close the dialog without logging out
   };
 
   const getUserInitial = () => {
@@ -44,51 +58,76 @@ const Navbar = () => {
   const id = open ? 'profile-popover' : undefined;
 
   return (
-    <AppBar position="static" color="primary" sx={{ boxShadow: 3 }}>
-      <Toolbar>
-        <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
-          FreelanceBill
-        </Typography>
-        {token ? (
-          <>
-            {location.pathname !== "/dashboard" && (
-              <Button color="inherit" component={Link} to="/dashboard" startIcon={<DashboardIcon />}></Button>
-            )}
-            <IconButton color="inherit" onClick={handleLogout}>
-              <ExitToAppIcon />
-            </IconButton>
-            <IconButton color="inherit" onClick={handleAvatarClick}>
-              <Avatar sx={{ mx: 2 }}>{getUserInitial()}</Avatar>
-            </IconButton>
-            <Popover
-              id={id}
-              open={open}
-              anchorEl={anchorEl}
-              onClose={handleClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <ProfileCard user={user} loading={loadingUser} />
-            </Popover>
-          </>
-        ) : (
-          <>
-            {location.pathname !== "/login" && (
-              <Button color="inherit" component={Link} to="/login" startIcon={<LoginIcon />}></Button>
-            )}
-            {location.pathname !== "/register" && (
-              <Button color="inherit" component={Link} to="/register" startIcon={<PersonAddIcon />}></Button>
-            )}
-          </>
-        )}
-      </Toolbar>
-    </AppBar>
+    <>
+      <AppBar position="static" color="primary" sx={{ boxShadow: 3 }}>
+        <Toolbar>
+          <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
+            FreelanceBill
+          </Typography>
+          {token ? (
+            <>
+              {location.pathname !== "/dashboard" && (
+                <Button color="inherit" component={Link} to="/dashboard" startIcon={<DashboardIcon />}></Button>
+              )}
+              <IconButton color="inherit" onClick={handleLogoutClick}>
+                <ExitToAppIcon />
+              </IconButton>
+              <IconButton color="inherit" onClick={handleAvatarClick}>
+                <Avatar sx={{ mx: 2 }}>{getUserInitial()}</Avatar>
+              </IconButton>
+              <Popover
+                id={id}
+                open={open}
+                anchorEl={anchorEl}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <ProfileCard user={user} loading={loadingUser} />
+              </Popover>
+            </>
+          ) : (
+            <>
+              {location.pathname !== "/login" && (
+                <Button color="inherit" component={Link} to="/login" startIcon={<LoginIcon />}></Button>
+              )}
+              {location.pathname !== "/register" && (
+                <Button color="inherit" component={Link} to="/register" startIcon={<PersonAddIcon />}></Button>
+              )}
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={handleLogoutCancel}
+        aria-labelledby="logout-dialog-title"
+        aria-describedby="logout-dialog-description"
+      >
+        <DialogTitle id="logout-dialog-title">Confirm Logout</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="logout-dialog-description">
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleLogoutCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleLogoutConfirm} color="primary" autoFocus>
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
