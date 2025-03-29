@@ -5,7 +5,7 @@ import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
 import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
 import TopClientRevenueCard from "./TopClientRevenueCard";
-import { fetchUserDetails } from "../App";
+import { fetchUserDetails, updateUserDetails } from "../App";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
