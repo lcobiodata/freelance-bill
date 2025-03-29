@@ -84,7 +84,18 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard user={user} loadingUser={loadingUser} updateUserDetails={(data) => updateUserDetails(data, () => fetchUserDetails(setUser, setLoadingUser))} />} />
+          <Route
+            path="/dashboard"
+            element={
+              <Dashboard
+                user={user}
+                loadingUser={loadingUser}
+                updateUserDetails={(data) =>
+                  updateUserDetails(data, () => fetchUserDetails(setUser, setLoadingUser))
+                }
+              />
+            }
+          />
           <Route path="/verify-success" element={<EmailVerificationSuccess />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
