@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TextField, Button, Box, CircularProgress, Paper, Typography, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit"; // Import Edit Icon
 
-export const ProfileCard = ({ user, loading, updateUser }) => {
+export const ProfileCard = ({ user, loading, updateUserDetails }) => {
   const [formData, setFormData] = useState({
     name: "",
     business_name: "",
@@ -35,7 +35,7 @@ export const ProfileCard = ({ user, loading, updateUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    await updateUser(formData);
+    await updateUserDetails(formData);
     setIsSaving(false);
     setIsDialogOpen(false);
   };

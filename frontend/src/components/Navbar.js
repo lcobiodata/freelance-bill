@@ -5,7 +5,7 @@ import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import { fetchUserDetails } from "../App";
+import { fetchUserDetails, updateUserDetails } from "../App";
 import { ProfileCard } from "./ProfileCard"; // Import the ProfileCard component
 
 const Navbar = () => {
@@ -97,7 +97,7 @@ const Navbar = () => {
                   horizontal: 'right',
                 }}
               >
-                <ProfileCard user={user} loading={loadingUser} />
+                <ProfileCard user={user} loading={loadingUser} updateUserDetails={(data) => updateUserDetails(data, () => fetchUserDetails(setUser, setLoadingUser))} />
               </Popover>
             </>
           ) : (
