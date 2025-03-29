@@ -141,7 +141,7 @@ const Navbar = () => {
         open={snackbarOpen}
         autoHideDuration={2000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} // Move to top center
       >
         <Alert onClose={handleSnackbarClose} severity="info" sx={{ width: '100%' }}>
           See you soon, bye!
