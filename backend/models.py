@@ -45,11 +45,11 @@ class User(db.Model):
     password = db.Column(db.String(100), nullable=True)  # OAuth users have no local password
     is_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(100), nullable=True)
-    name = db.Column(db.String(100))
+    name = db.Column(db.String(100), nullable=False)
     business_name = db.Column(db.String(100))
     email = db.Column(db.String(100))
     phone = db.Column(db.String(20))
-    address = db.Column(db.String(200))
+    address = db.Column(db.String(200), nullable=False)
     tax_number = db.Column(db.String(50))
 
     # Relationships
