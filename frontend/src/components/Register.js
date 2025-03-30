@@ -257,16 +257,6 @@ const Register = () => {
           />
           <TextField
             fullWidth
-            label="Province/State/County"
-            type="text"
-            variant="outlined"
-            margin="normal"
-            value={province}
-            onChange={(e) => setProvince(e.target.value)}
-            // required
-          />
-          <TextField
-            fullWidth
             label="Country"
             type="text"
             variant="outlined"
