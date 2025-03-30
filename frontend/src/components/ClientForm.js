@@ -136,21 +136,8 @@ const ClientForm = () => {
               margin="normal"
               onChange={handleChange}
             />
-            <TextField
-              label="Email"
-              name="email"
-              type="email"
-              fullWidth
-              margin="normal"
-              onChange={handleChange}
-              required
-            />
             <Box sx={{ mt: 2 }}>
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                Phone
-              </Typography>
               <PhoneInput
-                country={"us"}
                 value={client.phone}
                 onChange={handlePhoneChange}
                 inputStyle={{
@@ -160,9 +147,18 @@ const ClientForm = () => {
                   border: "1px solid rgba(0, 0, 0, 0.23)", // Match Material-UI TextField border
                   paddingLeft: "48px", // Adjust for country code dropdown
                 }}
-                placeholder="Enter phone number"
+                placeholder="Phone number"
               />
             </Box>
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              fullWidth
+              margin="normal"
+              onChange={handleChange}
+              required
+            />
             <TextField
               label="Address"
               name="address"

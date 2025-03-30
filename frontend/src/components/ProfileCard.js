@@ -165,10 +165,8 @@ export const ProfileCard = ({ user, loading, updateUserDetails }) => {
                   />
                 ))}
 
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <FormLabel sx={{ mb: 1 }}>Phone</FormLabel>
+                <Box sx={{ mt: 2, textAlign: "left" }}>
                   <PhoneInput
-                    country={"us"}
                     value={formData.phone}
                     onChange={handlePhoneChange}
                     inputStyle={{
@@ -178,9 +176,10 @@ export const ProfileCard = ({ user, loading, updateUserDetails }) => {
                       border: "1px solid rgba(0, 0, 0, 0.23)", // Match Material-UI TextField border
                       paddingLeft: "48px", // Adjust for country code dropdown
                     }}
-                    placeholder="Enter your phone number"
+                    placeholder="Phone number"
+                    required
                   />
-                </FormControl>
+                </Box>
 
                 <TextField
                   label="Email"

@@ -190,16 +190,6 @@ const Register = () => {
             onChange={(e) => setName(e.target.value)}
             required
           />
-          <TextField
-            fullWidth
-            label="Email"
-            type="email"
-            variant="outlined"
-            margin="normal"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
           <RadioGroup
             row
             value={isBusiness ? "business" : "person"}
@@ -233,6 +223,31 @@ const Register = () => {
               />
             </>
           )}
+          <Box sx={{ mt: 2, textAlign: "left" }}>
+            <PhoneInput
+              value={phone}
+              onChange={(phone) => setPhone(phone)}
+              inputStyle={{
+                width: "100%",
+                height: "56px", // Match Material-UI TextField height
+                borderRadius: "4px",
+                border: "1px solid rgba(0, 0, 0, 0.23)", // Match Material-UI TextField border
+                paddingLeft: "48px", // Adjust for country code dropdown
+              }}
+              placeholder="Phone number"
+              required
+            />
+          </Box>
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            variant="outlined"
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
           <TextField
             fullWidth
             label="Address"
@@ -273,25 +288,6 @@ const Register = () => {
             onChange={(e) => setPostCode(e.target.value)}
             // required
           />
-          <Box sx={{ mt: 2, textAlign: "left" }}>
-            <Typography variant="body1" sx={{ mb: 1 }}>
-              Phone
-            </Typography>
-            <PhoneInput
-              country={"us"}
-              value={phone}
-              onChange={(phone) => setPhone(phone)}
-              inputStyle={{
-                width: "100%",
-                height: "56px", // Match Material-UI TextField height
-                borderRadius: "4px",
-                border: "1px solid rgba(0, 0, 0, 0.23)", // Match Material-UI TextField border
-                paddingLeft: "48px", // Adjust for country code dropdown
-              }}
-              placeholder="Enter phone number"
-              required
-            />
-          </Box>
           <Button
             type="submit"
             variant="contained"
