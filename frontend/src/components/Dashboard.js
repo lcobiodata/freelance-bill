@@ -1,11 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Container, Paper, Box, Grid, Tabs, Tab, Card, CardContent, Button } from "@mui/material";
+import {
+  Typography,
+  Container,
+  Paper,
+  Box,
+  Grid,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 import { ClientsTable } from "./ClientsTable";
 import { InvoicesTable } from "./InvoicesTable";
 import TopClientLoyaltyCard from "./TopClientLoyaltyCard";
 import TopClientRevenueCard from "./TopClientRevenueCard";
-import { fetchUserDetails } from "../App";
+import { fetchUserDetails, updateUserDetails } from "../App";
+import { ProfileCard } from "./ProfileCard";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -18,6 +33,7 @@ const Dashboard = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
   const [tabIndex, setTabIndex] = useState(0);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false); // State for Edit Profile dialog
 
   useEffect(() => {
     if (token) {
@@ -26,6 +42,13 @@ const Dashboard = () => {
       fetchUserDetails(setUser, setLoadingUser);
     }
   }, [token]);
+
+  useEffect(() => {
+    // Check if the address is missing after user details are fetched
+    if (user && (!user.address || user.address.trim() === "")) {
+      setIsEditProfileOpen(true); // Open the Edit Profile dialog
+    }
+  }, [user]);
 
   const fetchInvoices = async () => {
     setLoadingInvoices(true);
@@ -53,6 +76,10 @@ const Dashboard = () => {
       setClients([]);
     }
     setLoadingClients(false);
+  };
+
+  const handleEditProfileClose = () => {
+    setIsEditProfileOpen(false); // Close the Edit Profile dialog
   };
 
   const markAsPaid = async (invoiceId) => {
@@ -131,32 +158,33 @@ const Dashboard = () => {
   const { topLoyaltyClient, topRevenueClient } = findTopClients();
 
   return (
-    <Grid container spacing={3} sx={{ height: "100%" }}>      
-      <Grid item xs={12} sx={{ transition: "width 0.3s ease-in-out" }}>
-        <Container maxWidth="xl">
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 4 }}>
-            <Box>
-              <Typography variant="h4" gutterBottom>
-                Welcome,{" "}
-                <Typography component="span" variant="h4" fontWeight="bold">
-                  {user ? user.name : "User"}
+    <>
+      <Grid container spacing={3} sx={{ height: "100%" }}>
+        <Grid item xs={12} sx={{ transition: "width 0.3s ease-in-out" }}>
+          <Container maxWidth="xl">
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 4 }}>
+              <Box>
+                <Typography variant="h4" gutterBottom>
+                  Welcome,{" "}
+                  <Typography component="span" variant="h4" fontWeight="bold">
+                    {user ? user.name : "User"}
+                  </Typography>
+                  !
                 </Typography>
-                !
-              </Typography>
-              <Typography variant="subtitle1" color="textSecondary">
-                Here is your dashboard overview. Manage your clients, invoices, and profile information.
-              </Typography>
+                <Typography variant="subtitle1" color="textSecondary">
+                  Here is your dashboard overview. Manage your clients, invoices, and profile information.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                color="primary"
+                component={Link}
+                to="/create-invoice"
+                sx={{ fontSize: "1.2rem", p: 2 }}
+              >
+                + New Invoice
+              </Button>
             </Box>
-            <Button
-              variant="contained"
-              color="primary"
-              component={Link}
-              to="/create-invoice"
-              sx={{ fontSize: '1.2rem', p: 2 }}
-            >
-              + New Invoice
-            </Button>
-          </Box>
 
           <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={4}>
@@ -215,38 +243,65 @@ const Dashboard = () => {
             </Grid>
           </Grid>
 
-          <Paper elevation={3} sx={{ p: 4 }}>
-            <Tabs
-              value={tabIndex}
-              onChange={(e, newValue) => setTabIndex(newValue)}
-              indicatorColor="primary"
-              textColor="primary"
-              variant="fullWidth"
-              sx={{ mb: 3 }}
-            >
-              <Tab 
-                label="Clients" 
-                sx={{ 
-                  fontWeight: tabIndex === 0 ? 'bold' : 'normal', 
-                  color: tabIndex === 0 ? 'primary.main' : 'text.secondary' 
-                }} 
-              />
-              <Tab 
-                label="Invoices" 
-                sx={{ 
-                  fontWeight: tabIndex === 1 ? 'bold' : 'normal', 
-                  color: tabIndex === 1 ? 'primary.main' : 'text.secondary' 
-                }} 
-              />
-            </Tabs>
-            {tabIndex === 0 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
-            {tabIndex === 1 && (
-              <InvoicesTable invoices={invoices} loading={loadingInvoices} markAsPaid={markAsPaid} markAsCancelled={markAsCancelled} user={user} />
-            )}
-          </Paper>
-        </Container>
+            {/* Tabs for Clients and Invoices */}
+            <Paper elevation={3} sx={{ p: 4 }}>
+              <Tabs
+                value={tabIndex}
+                onChange={(e, newValue) => setTabIndex(newValue)}
+                indicatorColor="primary"
+                textColor="primary"
+                variant="fullWidth"
+                sx={{ mb: 3 }}
+              >
+                <Tab 
+                  label="Clients" 
+                  sx={{ 
+                    fontWeight: tabIndex === 0 ? 'bold' : 'normal', 
+                    color: tabIndex === 0 ? 'primary.main' : 'text.secondary' 
+                  }} 
+                />
+                <Tab 
+                  label="Invoices" 
+                  sx={{ 
+                    fontWeight: tabIndex === 1 ? 'bold' : 'normal', 
+                    color: tabIndex === 1 ? 'primary.main' : 'text.secondary' 
+                  }} 
+                />
+              </Tabs>
+              {tabIndex === 0 && <ClientsTable clients={clients} loading={loadingClients} fetchClients={fetchClients} />}
+              {tabIndex === 1 && (
+                <InvoicesTable
+                  invoices={invoices}
+                  loading={loadingInvoices}
+                  markAsPaid={markAsPaid}
+                  markAsCancelled={markAsCancelled}
+                  user={user}
+                />
+              )}
+            </Paper>
+          </Container>
+        </Grid>
       </Grid>
-    </Grid>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditProfileOpen} onClose={handleEditProfileClose} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ textAlign: "center" }}>
+          Please complete your profile to enable invoice creation.
+        </DialogTitle>
+        <DialogContent>
+          <ProfileCard
+            user={user}
+            loading={loadingUser}
+            updateUserDetails={(data) =>
+              updateUserDetails(data, () => {
+                setUser({ ...user, ...data }); // Update user state with new data
+                setIsEditProfileOpen(false); // Close dialog after saving
+              })
+            }
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
