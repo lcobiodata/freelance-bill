@@ -103,7 +103,9 @@ const Register = () => {
 
     try {
       // Combine address fields into a single string
-      const fullAddress = `${address}, ${city}, ${province}, ${country}, ${postCode}`;
+      const fullAddress = [address, city, province, country, postCode]
+        .filter((field) => field && field.trim() !== "")
+        .join(", ");
 
       const res = await axios.post(`${API_URL}/register`, {
         username,
