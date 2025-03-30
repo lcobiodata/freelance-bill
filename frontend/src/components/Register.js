@@ -12,8 +12,6 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  FormControl,
-  FormLabel,
 } from "@mui/material";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -275,8 +273,10 @@ const Register = () => {
             onChange={(e) => setPostCode(e.target.value)}
             // required
           />
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <FormLabel sx={{ mb: 1 }}>Phone</FormLabel>
+          <Box sx={{ mt: 2, textAlign: "left" }}>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              Phone
+            </Typography>
             <PhoneInput
               country={"us"}
               value={phone}
@@ -288,10 +288,10 @@ const Register = () => {
                 border: "1px solid rgba(0, 0, 0, 0.23)", // Match Material-UI TextField border
                 paddingLeft: "48px", // Adjust for country code dropdown
               }}
-              placeholder="Enter your phone number"
+              placeholder="Enter phone number"
               required
             />
-          </FormControl>
+          </Box>
           <Button
             type="submit"
             variant="contained"
