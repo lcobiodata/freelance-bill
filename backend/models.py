@@ -47,7 +47,7 @@ class User(db.Model):
     verification_token = db.Column(db.String(100), nullable=True)
     name = db.Column(db.String(100), nullable=False)
     business_name = db.Column(db.String(100))
-    email = db.Column(db.String(100))
+    email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(20))
     address = db.Column(db.String(200), nullable=False)
     tax_number = db.Column(db.String(50))
